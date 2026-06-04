@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en" class="light-theme">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Todo - Tasks & Analytics</title>
+  <!-- Modern Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <!-- ================= AUTH/LANDING PAGE ================= -->
+  <div id="landing-container" class="container auth-mode">
+    <header class="landing-header">
+      <div class="logo">
+        <i class="fa-solid fa-circle-check"></i>
+        <span>SmartTodo</span>
+      </div>
+      <div class="landing-nav-btns">
+        <button id="show-login-btn" class="btn btn-ghost">Log In</button>
+        <button id="show-register-btn" class="btn btn-primary">Sign Up</button>
+      </div>
+    </header>
+
+    <main class="landing-main">
+      <div class="landing-hero">
+        <h1>Organize your life, <br><span class="gradient-text">beautifully & smartly.</span></h1>
+        <p>A high-performance personal task organizer equipped with drag-and-drop planning, due-date timers, deadline notifications, and analytics dashboard.</p>
+        <div class="hero-actions">
+          <button id="hero-get-started" class="btn btn-primary btn-large">Get Started For Free</button>
+        </div>
+      </div>
+      
+      <div class="auth-card" id="auth-card">
+        <!-- Login Form -->
+        <div class="auth-form-wrapper" id="login-form-wrapper">
+          <h2>Welcome Back</h2>
+          <p class="subtitle">Log in to manage your tasks</p>
+          <form id="login-form">
+            <div class="form-group">
+              <label for="login-email"><i class="fa-regular fa-envelope"></i> Email</label>
+              <input type="email" id="login-email" required placeholder="you@example.com">
+            </div>
+            <div class="form-group">
+              <label for="login-password"><i class="fa-solid fa-lock"></i> Password</label>
+              <input type="password" id="login-password" required placeholder="••••••••">
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Log In</button>
+          </form>
+          <p class="switch-auth">Don't have an account? <a href="#" id="to-register">Sign up</a></p>
+        </div>
+
+        <!-- Register Form -->
+        <div class="auth-form-wrapper hidden" id="register-form-wrapper">
+          <h2>Create Account</h2>
+          <p class="subtitle">Join SmartTodo today</p>
+          <form id="register-form">
+            <div class="form-group">
+              <label for="reg-username"><i class="fa-regular fa-user"></i> Username</label>
+              <input type="text" id="reg-username" required placeholder="john_doe">
+            </div>
+            <div class="form-group">
+              <label for="reg-email"><i class="fa-regular fa-envelope"></i> Email</label>
+              <input type="email" id="reg-email" required placeholder="you@example.com">
+            </div>
+            <div class="form-group">
+              <label for="reg-password"><i class="fa-solid fa-lock"></i> Password</label>
+              <input type="password" id="reg-password" required placeholder="••••••••">
+              <span class="password-tip">At least 8 characters, 1 uppercase, 1 number, 1 special character.</span>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Sign Up</button>
+          </form>
+          <p class="switch-auth">Already have an account? <a href="#" id="to-login">Log in</a></p>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- ================= APP/DASHBOARD PAGE ================= -->
+  <div id="app-container" class="container app-mode hidden">
+    <!-- Navigation Bar -->
+    <nav class="app-navbar">
+      <div class="logo">
+        <i class="fa-solid fa-circle-check"></i>
+        <span>SmartTodo</span>
+      </div>
+      <div class="nav-right">
+        <!-- Theme Toggle -->
+        <button id="theme-toggle" class="btn-icon" title="Toggle Theme">
+          <i class="fa-solid fa-moon"></i>
+        </button>
+        <!-- Activity Bell -->
+        <button id="activity-log-toggle" class="btn-icon" title="Activity History">
+          <i class="fa-solid fa-history"></i>
+        </button>
+        <!-- User Profile Dropdown Trigger -->
+        <div class="user-profile-menu">
+          <button id="profile-dropdown-btn" class="btn btn-ghost user-badge">
+            <i class="fa-regular fa-user-circle"></i>
+            <span id="nav-username">User</span>
+          </button>
+          <div class="dropdown-menu hidden" id="profile-dropdown">
+            <a href="#" id="open-profile-btn"><i class="fa-regular fa-id-card"></i> View Profile</a>
+            <a href="#" id="export-csv-btn"><i class="fa-solid fa-file-csv"></i> Export to CSV</a>
+            <a href="#" id="export-pdf-btn"><i class="fa-solid fa-file-pdf"></i> Export to PDF</a>
+            <hr>
+            <a href="#" id="logout-btn" class="logout-link"><i class="fa-solid fa-sign-out-alt"></i> Log Out</a>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Main Workspace Layout -->
+    <div class="app-layout">
+      
+      <!-- Sidebar Options (Search / Filters / Categories) -->
+      <aside class="app-sidebar">
+        <!-- Workspace Toggles -->
+        <div class="sidebar-box workspace-selector">
+          <h3>Workspace</h3>
+          <div class="workspace-nav">
+            <button id="ws-tasks-btn" class="ws-tab-btn active"><i class="fa-solid fa-list-check"></i> Tasks & Analytics</button>
+            <button id="ws-notes-btn" class="ws-tab-btn"><i class="fa-solid fa-note-sticky"></i> Notes</button>
+            <button id="ws-lists-btn" class="ws-tab-btn"><i class="fa-regular fa-square-check"></i> Checklists</button>
+          </div>
+        </div>
+
+        <!-- Live Search -->
+        <div class="sidebar-box search-box">
+          <h3>Search</h3>
+          <div class="search-input-wrapper">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="task-search" placeholder="Search tasks...">
+          </div>
+        </div>
+
+        <!-- Completion Percentage Indicator -->
+        <div class="sidebar-box progress-box">
+          <h3>Progress Tracker</h3>
+          <div class="progress-radial-wrapper">
+            <svg class="radial-progress-svg" viewBox="0 0 100 100">
+              <circle class="radial-bg" cx="50" cy="50" r="40"></circle>
+              <circle class="radial-bar" cx="50" cy="50" r="40" stroke-dasharray="251.2" stroke-dashoffset="251.2"></circle>
+            </svg>
+            <div class="progress-radial-text">
+              <span id="radial-percent">0%</span>
+              <small>Done</small>
+            </div>
+          </div>
+        </div>
+
+        <!-- Task Filters -->
+        <div class="sidebar-box filters-box">
+          <h3>Filters</h3>
+          <div class="filter-section">
+            <h4>Status</h4>
+            <div class="filter-options">
+              <label class="filter-chip active" data-status="">All</label>
+              <label class="filter-chip" data-status="Pending">Pending</label>
+              <label class="filter-chip" data-status="Completed">Completed</label>
+            </div>
+          </div>
+
+          <div class="filter-section">
+            <h4>Priority</h4>
+            <div class="filter-checkboxes">
+              <label><input type="radio" name="priority-filter" value="" checked> All Priorities</label>
+              <label><input type="radio" name="priority-filter" value="High"> <span class="priority-indicator high"></span> High</label>
+              <label><input type="radio" name="priority-filter" value="Medium"> <span class="priority-indicator medium"></span> Medium</label>
+              <label><input type="radio" name="priority-filter" value="Low"> <span class="priority-indicator low"></span> Low</label>
+            </div>
+          </div>
+
+          <div class="filter-section">
+            <div class="category-header">
+              <h4>Categories</h4>
+              <button id="manage-categories-btn" class="btn-text-icon" title="Manage Categories"><i class="fa-solid fa-cog"></i></button>
+            </div>
+            <select id="category-filter" class="form-control">
+              <option value="">All Categories</option>
+              <!-- Dynamic Categories Options loaded via API -->
+            </select>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main Panel (Dashboard Cards + Task Listing) -->
+      <main class="app-main">
+        
+        <!-- ================= TASKS WORKSPACE ================= -->
+        <div id="tasks-workspace">
+          <!-- Dashboard Statistics Row -->
+          <section class="dashboard-stats">
+            <div class="stat-card total">
+              <div class="stat-icon"><i class="fa-solid fa-list-check"></i></div>
+              <div class="stat-details">
+                <h4 id="stat-total">0</h4>
+                <p>Total Tasks</p>
+              </div>
+            </div>
+            <div class="stat-card pending">
+              <div class="stat-icon"><i class="fa-solid fa-clock"></i></div>
+              <div class="stat-details">
+                <h4 id="stat-pending">0</h4>
+                <p>Pending</p>
+              </div>
+            </div>
+            <div class="stat-card completed">
+              <div class="stat-icon"><i class="fa-solid fa-check-double"></i></div>
+              <div class="stat-details">
+                <h4 id="stat-completed">0</h4>
+                <p>Completed</p>
+              </div>
+            </div>
+            <div class="stat-card overdue">
+              <div class="stat-icon"><i class="fa-solid fa-circle-exclamation"></i></div>
+              <div class="stat-details">
+                <h4 id="stat-overdue">0</h4>
+                <p>Overdue</p>
+              </div>
+            </div>
+          </section>
+
+          <!-- Tasks Section Header (Sorting & Action buttons) -->
+          <section class="tasks-control-bar">
+            <div class="sorting-wrapper">
+              <span>Sort by:</span>
+              <div class="sort-buttons">
+                <button class="btn btn-sort active" data-sort="position">Custom</button>
+                <button class="btn btn-sort" data-sort="due_date">Due Date</button>
+                <button class="btn btn-sort" data-sort="priority">Priority</button>
+                <button class="btn btn-sort" data-sort="title">Alphabetical</button>
+                <button class="btn btn-sort" data-sort="created_at">Creation Date</button>
+              </div>
+              <button id="sort-order-toggle" class="btn-icon-small" title="Toggle Order">
+                <i class="fa-solid fa-arrow-up-wide-short"></i>
+              </button>
+            </div>
+            <button id="add-task-btn" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Add Task</button>
+          </section>
+
+          <!-- Task List Area -->
+          <section class="tasks-container">
+            <div id="tasks-list" class="tasks-list">
+              <!-- Dynamic task cards loaded via JS -->
+              <div class="no-tasks-state">
+                <i class="fa-regular fa-folder-open"></i>
+                <p>No tasks found. Add a task to get started!</p>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- ================= NOTES WORKSPACE ================= -->
+        <div id="notes-workspace" class="hidden">
+          <div class="workspace-header-bar">
+            <h2>Notes</h2>
+            <div class="notes-header-actions">
+              <button id="add-note-btn" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Take Note</button>
+            </div>
+          </div>
+          
+          <div id="notes-grid" class="notes-grid">
+            <!-- Dynamic sticky notes loaded via JS -->
+            <div class="no-notes-state">
+              <i class="fa-regular fa-lightbulb"></i>
+              <p>No notes found. Click "Take Note" to save thoughts!</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= CHECKLISTS WORKSPACE ================= -->
+        <div id="checklists-workspace" class="hidden">
+          <div class="workspace-header-bar">
+            <h2>Checklists</h2>
+            <div class="notes-header-actions">
+              <button id="add-list-btn" class="btn btn-primary"><i class="fa-regular fa-square-check"></i> Create Checklist</button>
+            </div>
+          </div>
+          
+          <div id="checklists-grid" class="notes-grid">
+            <!-- Dynamic checklists loaded via JS -->
+            <div class="no-notes-state">
+              <i class="fa-regular fa-square-check"></i>
+              <p>No checklists found. Click "Create Checklist" to get started!</p>
+            </div>
+          </div>
+        </div>
+
+      </main>
+
+    </div>
+  </div>
+
+  <!-- ================= MODAL DIALOGS ================= -->
+
+  <!-- 1. TASK MODAL (ADD / EDIT) -->
+  <div class="modal hidden" id="task-modal">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="task-modal-title">Add New Task</h3>
+        <button class="modal-close btn-icon-small"><i class="fa-solid fa-times"></i></button>
+      </div>
+      <form id="task-form">
+        <input type="hidden" id="task-id">
+        <div class="form-group">
+          <label for="task-title">Task Title *</label>
+          <input type="text" id="task-title" required placeholder="e.g. Finalize quarterly presentation">
+        </div>
+        <div class="form-group">
+          <label for="task-desc">Description</label>
+          <textarea id="task-desc" rows="3" placeholder="Describe the task parameters, resources..."></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group col">
+            <label for="task-category">Category</label>
+            <select id="task-category" class="form-control">
+              <option value="">No Category</option>
+              <!-- Dynamic options -->
+            </select>
+          </div>
+          <div class="form-group col">
+            <label for="task-priority">Priority</label>
+            <select id="task-priority" class="form-control">
+              <option value="Low">Low</option>
+              <option value="Medium" selected>Medium</option>
+              <option value="High">High</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group col">
+            <label for="task-due-date">Due Date & Time *</label>
+            <input type="datetime-local" id="task-due-date" required>
+          </div>
+          <div class="form-group col" id="task-status-row">
+            <label for="task-status">Status</label>
+            <select id="task-status" class="form-control">
+              <option value="Pending" selected>Pending</option>
+              <option value="Completed">Completed</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost modal-close">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="task-form-submit">Save Task</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 1.5. NOTE MODAL (ADD / EDIT) -->
+  <div class="modal hidden" id="note-modal">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="note-modal-title">Take a Note</h3>
+        <button class="modal-close btn-icon-small"><i class="fa-solid fa-times"></i></button>
+      </div>
+      <form id="note-form">
+        <input type="hidden" id="note-id">
+        <div class="form-group">
+          <label for="note-title">Title *</label>
+          <input type="text" id="note-title" required placeholder="Note Title...">
+        </div>
+        
+        <!-- Text Note Body -->
+        <div class="form-group" id="note-body-group">
+          <label for="note-content">Note Content</label>
+          <textarea id="note-content" rows="5" placeholder="Take a note..."></textarea>
+        </div>
+
+        <!-- Note Styles Group -->
+        <div class="note-styles-group" style="border: 1px solid var(--border-color); padding: 1.25rem; border-radius: 12px; margin-top: 1.25rem; margin-bottom: 1.25rem;">
+          <h4 style="font-size: 0.8rem; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.85rem; letter-spacing: 0.05em; font-weight: 700;">Note Styles</h4>
+          
+          <div class="form-group">
+            <label for="note-template">Content Template</label>
+            <select id="note-template" class="form-control">
+              <option value="" selected>Standard Blank</option>
+              <option value="meeting">Meeting Minutes</option>
+              <option value="ideas">Brainstorming Ideas</option>
+              <option value="journal">Daily Journal Entry</option>
+            </select>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0.75rem;">
+            <label>Color Option</label>
+            <div class="color-palette-picker" id="color-palette-picker">
+              <span class="color-picker-option default active" data-color="default" title="Default Cream"></span>
+              <span class="color-picker-option yellow" data-color="yellow" title="Warm Cream"></span>
+              <span class="color-picker-option blue" data-color="blue" title="Lavender"></span>
+              <span class="color-picker-option green" data-color="green" title="Soft Orchid"></span>
+              <span class="color-picker-option pink" data-color="pink" title="Rose Violet"></span>
+              <span class="color-picker-option purple" data-color="purple" title="Vibrant Violet"></span>
+              <span class="color-picker-option gray" data-color="gray" title="Muted Cream-Violet"></span>
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0;">
+            <label>Template Pattern</label>
+            <div class="pattern-palette-picker" id="note-pattern-picker">
+              <span class="pattern-picker-option blank active" data-pattern="blank" title="Blank"></span>
+              <span class="pattern-picker-option lined" data-pattern="lined" title="Lined Paper"></span>
+              <span class="pattern-picker-option grid" data-pattern="grid" title="Grid Paper"></span>
+              <span class="pattern-picker-option dots" data-pattern="dots" title="Dotted Paper"></span>
+              <span class="pattern-picker-option diagonal" data-pattern="diagonal" title="Diagonal Stripes"></span>
+              <span class="pattern-picker-option gradient" data-pattern="gradient" title="Gradient Overlay"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost modal-close">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="note-form-submit">Add Note</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 1.6. CHECKLIST MODAL (ADD / EDIT) -->
+  <div class="modal hidden" id="checklist-modal">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="checklist-modal-title">Create Checklist</h3>
+        <button class="modal-close btn-icon-small"><i class="fa-solid fa-times"></i></button>
+      </div>
+      <form id="checklist-form">
+        <input type="hidden" id="checklist-id">
+        <div class="form-group">
+          <label for="checklist-title">Checklist Title *</label>
+          <input type="text" id="checklist-title" required placeholder="Checklist Title...">
+        </div>
+        
+        <!-- Checklist Builder Body (No textarea!) -->
+        <div class="form-group">
+          <label>Checklist Items</label>
+          <div id="checklist-items-container" class="checklist-builder">
+            <!-- Render items dynamically with input and remove button -->
+          </div>
+          <button type="button" id="checklist-add-item-btn" class="btn btn-text-icon"><i class="fa-solid fa-plus"></i> Add Item</button>
+        </div>
+
+        <!-- Checklist Styles Group -->
+        <div class="note-styles-group" style="border: 1px solid var(--border-color); padding: 1.25rem; border-radius: 12px; margin-top: 1.25rem; margin-bottom: 1.25rem;">
+          <h4 style="font-size: 0.8rem; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.85rem; letter-spacing: 0.05em; font-weight: 700;">Checklist Styles</h4>
+
+          <div class="form-group" style="margin-bottom: 0.75rem;">
+            <label>Color Option</label>
+            <div class="color-palette-picker" id="checklist-color-picker">
+              <span class="color-picker-option default active" data-color="default" title="Default Cream"></span>
+              <span class="color-picker-option yellow" data-color="yellow" title="Warm Cream"></span>
+              <span class="color-picker-option blue" data-color="blue" title="Lavender"></span>
+              <span class="color-picker-option green" data-color="green" title="Soft Orchid"></span>
+              <span class="color-picker-option pink" data-color="pink" title="Rose Violet"></span>
+              <span class="color-picker-option purple" data-color="purple" title="Vibrant Violet"></span>
+              <span class="color-picker-option gray" data-color="gray" title="Muted Cream-Violet"></span>
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0;">
+            <label>Template Pattern</label>
+            <div class="pattern-palette-picker" id="checklist-pattern-picker">
+              <span class="pattern-picker-option blank active" data-pattern="blank" title="Blank"></span>
+              <span class="pattern-picker-option lined" data-pattern="lined" title="Lined Paper"></span>
+              <span class="pattern-picker-option grid" data-pattern="grid" title="Grid Paper"></span>
+              <span class="pattern-picker-option dots" data-pattern="dots" title="Dotted Paper"></span>
+              <span class="pattern-picker-option diagonal" data-pattern="diagonal" title="Diagonal Stripes"></span>
+              <span class="pattern-picker-option gradient" data-pattern="gradient" title="Gradient Overlay"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost modal-close">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="checklist-form-submit">Create Checklist</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 2. CATEGORY MANAGER MODAL -->
+  <div class="modal hidden" id="category-modal">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Manage Categories</h3>
+        <button class="modal-close btn-icon-small"><i class="fa-solid fa-times"></i></button>
+      </div>
+      <div class="category-manager-body">
+        <form id="category-add-form" class="inline-form">
+          <input type="text" id="new-category-name" placeholder="New category name..." required>
+          <button type="submit" class="btn btn-primary">Add</button>
+        </form>
+        <div class="categories-list-wrapper">
+          <ul id="categories-list" class="manager-list">
+            <!-- Dynamic categories list items with Edit/Delete options -->
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. PROFILE & PREFERENCES MODAL -->
+  <div class="modal hidden" id="profile-modal">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>User Profile & Settings</h3>
+        <button class="modal-close btn-icon-small"><i class="fa-solid fa-times"></i></button>
+      </div>
+      <div class="profile-modal-body">
+        <div class="profile-section">
+          <h4>Account Details</h4>
+          <div class="profile-info-grid">
+            <div><strong>Username:</strong> <span id="profile-username">User</span></div>
+            <div><strong>Email:</strong> <span id="profile-email">you@example.com</span></div>
+          </div>
+        </div>
+        
+        <div class="profile-section">
+          <h4>Application Settings</h4>
+          <div class="setting-row">
+            <span>Visual Theme</span>
+            <div class="theme-option-btns">
+              <button id="theme-light-btn" class="btn btn-ghost btn-small"><i class="fa-regular fa-sun"></i> Light</button>
+              <button id="theme-dark-btn" class="btn btn-ghost btn-small"><i class="fa-solid fa-moon"></i> Dark</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="profile-section">
+          <h4>Account Security</h4>
+          <p class="help-text">Password modification requires credentials validation.</p>
+          <button id="change-pass-toggle" class="btn btn-ghost btn-small btn-block"><i class="fa-solid fa-key"></i> Update Credentials Options</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. ACTIVITY HISTORY LOG WIDGET (SLIDE OVER) -->
+  <div class="slideover hidden" id="activity-slideover">
+    <div class="slideover-backdrop"></div>
+    <div class="slideover-content">
+      <div class="slideover-header">
+        <h3><i class="fa-solid fa-history"></i> Task Activity History</h3>
+        <button id="activity-slideover-close" class="btn-icon-small"><i class="fa-solid fa-times"></i></button>
+      </div>
+      <div class="slideover-body" id="activity-log-list">
+        <!-- Dynamic logs -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast / Notifications Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Print Export Hidden Table Container -->
+  <div id="print-export-container" class="print-export-hidden"></div>
+
+  <!-- Scripts -->
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
