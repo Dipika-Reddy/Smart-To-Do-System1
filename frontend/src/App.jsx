@@ -77,9 +77,23 @@ function App() {
   const authCardRef = useRef(null);
 
   // Auth screen state
-  const [authRoleSelection, setAuthRoleSelection] = useState(true); // show select Admin vs User landing first
-  const [selectedAuthRole, setSelectedAuthRole] = useState('User'); // default role choice
+  const [authRoleSelection, setAuthRoleSelection] = useState(false); // No landing selection screen by default
+  const [selectedAuthRole, setSelectedAuthRole] = useState(
+    window.location.hash === '#admin' || window.location.search.includes('admin=true') ? 'Admin' : 'User'
+  );
   const [authForm, setAuthForm] = useState('login'); // login | register
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      if (window.location.hash === '#admin') {
+        setSelectedAuthRole('Admin');
+      } else if (window.location.hash === '#user' || !window.location.hash) {
+        setSelectedAuthRole('User');
+      }
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
   const [loginUsername, setLoginUsername] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [regUsername, setRegUsername] = useState('');
@@ -356,139 +370,131 @@ function App() {
             <span>SmartTodo</span>
           </div>
           <div className="landing-nav-btns">
-            <button className="btn btn-ghost" onClick={() => { setAuthRoleSelection(true); }}>Change Role Selection</button>
+            {selectedAuthRole === 'User' ? (
+              <a href="#admin" className="btn btn-ghost" onClick={() => { setSelectedAuthRole('Admin'); window.location.hash = '#admin'; }}>Admin Portal</a>
+            ) : (
+              <a href="#" className="btn btn-ghost" onClick={() => { setSelectedAuthRole('User'); window.location.hash = ''; }}>User Workspace</a>
+            )}
           </div>
         </header>
 
         <main className="landing-main">
-          {authRoleSelection ? (
-            // 1. Role Selection Screen
-            <div className="landing-hero">
-              <h1>Welcome to <span className="gradient-text">SmartTodo System</span></h1>
-              <p>Please select your workspace identity category to authenticate into the system.</p>
-
-              <div className="role-cards-row">
-                <div 
-                  className="auth-card" 
-                  id="select-admin-card"
-                  onClick={() => selectRoleAndGo('Admin')}
-                >
-                  <Shield size={48} style={{ color: 'var(--primary-color)', marginBottom: '1rem' }} />
-                  <h3>Admin Portal</h3>
-                  <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>Manage user tasks, categories, monitoring dashboards, and review submissions.</p>
-                </div>
-
-                <div 
-                  className="auth-card" 
-                  id="select-user-card"
-                  onClick={() => selectRoleAndGo('User')}
-                >
-                  <User size={48} style={{ color: 'var(--primary-color)', marginBottom: '1rem' }} />
-                  <h3>User Workspace</h3>
-                  <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>View and execute your assigned tasks, manage personal notes and checklists.</p>
-                </div>
-              </div>
+          <div className="auth-form-outer">
+            <div style={{ marginBottom: '1rem', display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
+              <span className="badge badge-priority-high" style={{ textTransform: 'uppercase' }}>Authenticating as: {selectedAuthRole}</span>
             </div>
-          ) : (
-            // 2. Auth Input Forms — centered by .auth-form-outer
-            <div className="auth-form-outer">
-              <div style={{ marginBottom: '1rem', display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
-                <span className="badge badge-priority-high" style={{ textTransform: 'uppercase' }}>Authenticating as: {selectedAuthRole}</span>
-                <button className="btn btn-ghost btn-small" onClick={() => setAuthRoleSelection(true)} style={{ fontSize: '0.75rem' }}>Switch Role</button>
-              </div>
 
-              <div className="auth-card" ref={authCardRef} id="auth-card" style={{ width: '100%' }}>
-                {authForm === 'login' ? (
-                  <div className="auth-form-wrapper" id="login-form-wrapper">
-                    <h2>{selectedAuthRole} Sign In</h2>
-                    <p className="subtitle">Enter credentials to load dashboard</p>
-                    <form id="login-form" onSubmit={handleLoginSubmit}>
-                      <div className="form-group">
-                        <label htmlFor="login-username">Username</label>
-                        <input 
-                          type="text" 
-                          id="login-username" 
-                          required 
-                          placeholder="Enter your username"
-                          value={loginUsername}
-                          onChange={(e) => setLoginUsername(e.target.value)}
-                        />
-                      </div>
-                      <div className="form-group">
-                        <label htmlFor="login-password">Password</label>
-                        <input 
-                          type="password" 
-                          id="login-password" 
-                          autoComplete="current-password"
-                          required 
-                          placeholder="••••••••"
-                          value={loginPassword}
-                          onChange={(e) => setLoginPassword(e.target.value)}
-                        />
-                      </div>
-                      <button type="submit" className="btn btn-primary btn-block">Log In</button>
-                    </form>
-                    <p className="switch-auth">Don't have an account? <a href="#" onClick={(e) => { e.preventDefault(); setAuthForm('register'); }}>Sign up</a></p>
-                  </div>
-                ) : (
-                  <div className="auth-form-wrapper" id="register-form-wrapper">
-                    <h2>Create {selectedAuthRole} Account</h2>
-                    <p className="subtitle">Join SmartTodo system</p>
-                    <form id="register-form" onSubmit={handleRegisterSubmit}>
-                      <div className="form-group">
-                        <label htmlFor="reg-username">Username</label>
-                        <input 
-                          type="text" 
-                          id="reg-username" 
-                          required 
-                          placeholder="e.g. jsmith"
-                          value={regUsername}
-                          onChange={(e) => setRegUsername(e.target.value)}
-                        />
-                      </div>
-                      <div className="form-group">
-                        <label htmlFor="reg-fullname">Full Name</label>
-                        <input 
-                          type="text" 
-                          id="reg-fullname" 
-                          required 
-                          placeholder="e.g. John Smith"
-                          value={regFullName}
-                          onChange={(e) => setRegFullName(e.target.value)}
-                        />
-                      </div>
-                      <div className="form-group">
-                        <label htmlFor="reg-email">Email Address</label>
-                        <input 
-                          type="email" 
-                          id="reg-email" 
-                          required 
-                          placeholder="username@example.com"
-                          value={regEmail}
-                          onChange={(e) => setRegEmail(e.target.value)}
-                        />
-                      </div>
-                      <div className="form-group">
-                        <label htmlFor="reg-password">Password</label>
-                        <input 
-                          type="password" 
-                          id="reg-password" 
-                          autoComplete="new-password"
-                          required 
-                          placeholder="••••••••"
-                          value={regPassword}
-                          onChange={(e) => setRegPassword(e.target.value)}
-                        />
-                        <span className="password-tip">At least 8 characters, 1 uppercase, 1 number, 1 special character.</span>
-                      </div>
-                      <button type="submit" className="btn btn-primary btn-block">Sign Up</button>
-                    </form>
-                    <p className="switch-auth">Already have an account? <a href="#" onClick={(e) => { e.preventDefault(); setAuthForm('login'); }}>Log in</a></p>
-                  </div>
-                )}
-              </div>
+            <div className="auth-card" ref={authCardRef} id="auth-card" style={{ width: '100%' }}>
+              {authForm === 'login' ? (
+                <div className="auth-form-wrapper" id="login-form-wrapper">
+                  <h2>{selectedAuthRole} Sign In</h2>
+                  <p className="subtitle">Enter credentials to load dashboard</p>
+                  <form id="login-form" onSubmit={handleLoginSubmit}>
+                    <div className="form-group">
+                      <label htmlFor="login-username">Username</label>
+                      <input 
+                        type="text" 
+                        id="login-username" 
+                        required 
+                        placeholder="Enter your username"
+                        value={loginUsername}
+                        onChange={(e) => setLoginUsername(e.target.value)}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="login-password">Password</label>
+                      <input 
+                        type="password" 
+                        id="login-password" 
+                        autoComplete="current-password"
+                        required 
+                        placeholder="••••••••"
+                        value={loginPassword}
+                        onChange={(e) => setLoginPassword(e.target.value)}
+                      />
+                    </div>
+                    <button type="submit" className="btn btn-primary btn-block">Log In</button>
+                  </form>
+                  <p className="switch-auth">Don't have an account? <a href="#" onClick={(e) => { e.preventDefault(); setAuthForm('register'); }}>Sign up</a></p>
+
+                  {selectedAuthRole === 'User' ? (
+                    <p className="switch-auth" style={{ marginTop: '1rem', borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
+                      Are you an administrator? <a href="#admin" onClick={(e) => { e.preventDefault(); window.location.hash = '#admin'; setSelectedAuthRole('Admin'); }}>Admin Sign In</a>
+                    </p>
+                  ) : (
+                    <p className="switch-auth" style={{ marginTop: '1rem', borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
+                      Not an admin? <a href="#" onClick={(e) => { e.preventDefault(); window.location.hash = ''; setSelectedAuthRole('User'); }}>User Sign In</a>
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div className="auth-form-wrapper" id="register-form-wrapper">
+                  <h2>Create {selectedAuthRole} Account</h2>
+                  <p className="subtitle">Join SmartTodo system</p>
+                  <form id="register-form" onSubmit={handleRegisterSubmit}>
+                    <div className="form-group">
+                      <label htmlFor="reg-username">Username</label>
+                      <input 
+                        type="text" 
+                        id="reg-username" 
+                        required 
+                        placeholder="e.g. jsmith"
+                        value={regUsername}
+                        onChange={(e) => setRegUsername(e.target.value)}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="reg-fullname">Full Name</label>
+                      <input 
+                        type="text" 
+                        id="reg-fullname" 
+                        required 
+                        placeholder="e.g. John Smith"
+                        value={regFullName}
+                        onChange={(e) => setRegFullName(e.target.value)}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="reg-email">Email Address</label>
+                      <input 
+                        type="email" 
+                        id="reg-email" 
+                        required 
+                        placeholder="username@example.com"
+                        value={regEmail}
+                        onChange={(e) => setRegEmail(e.target.value)}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="reg-password">Password</label>
+                      <input 
+                        type="password" 
+                        id="reg-password" 
+                        autoComplete="new-password"
+                        required 
+                        placeholder="••••••••"
+                        value={regPassword}
+                        onChange={(e) => setRegPassword(e.target.value)}
+                      />
+                      <span className="password-tip">At least 8 characters, 1 uppercase, 1 number, 1 special character.</span>
+                    </div>
+                    <button type="submit" className="btn btn-primary btn-block">Sign Up</button>
+                  </form>
+                  <p className="switch-auth">Already have an account? <a href="#" onClick={(e) => { e.preventDefault(); setAuthForm('login'); }}>Log in</a></p>
+
+                  {selectedAuthRole === 'User' ? (
+                    <p className="switch-auth" style={{ marginTop: '1rem', borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
+                      Are you an administrator? <a href="#admin" onClick={(e) => { e.preventDefault(); window.location.hash = '#admin'; setSelectedAuthRole('Admin'); }}>Admin Sign In</a>
+                    </p>
+                  ) : (
+                    <p className="switch-auth" style={{ marginTop: '1rem', borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
+                      Not an admin? <a href="#" onClick={(e) => { e.preventDefault(); window.location.hash = ''; setSelectedAuthRole('User'); }}>User Sign In</a>
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </main>
         <ToastContainer />
       </div>
