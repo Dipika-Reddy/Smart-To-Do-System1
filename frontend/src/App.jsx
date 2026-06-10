@@ -27,7 +27,7 @@ import {
   CheckCircle2, ListTodo, Plus, Calendar, ArrowUp, ArrowDown, 
   StickyNote, CheckSquare, Shield, BarChart2, Briefcase, 
   User, Check, Clock, AlertTriangle, Play, RefreshCw, MessageSquare,
-  Settings
+  Settings, Eye, EyeOff
 } from 'lucide-react';
 function App() {
   const {
@@ -100,6 +100,8 @@ function App() {
   const [regFullName, setRegFullName] = useState('');
   const [regEmail, setRegEmail] = useState('');
   const [regPassword, setRegPassword] = useState('');
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showRegPassword, setShowRegPassword] = useState(false);
 
   // Drag and Drop Local States
   const [draggedTaskId, setDraggedTaskId] = useState(null);
@@ -401,15 +403,25 @@ function App() {
                     </div>
                     <div className="form-group">
                       <label htmlFor="login-password">Password</label>
-                      <input 
-                        type="password" 
-                        id="login-password" 
-                        autoComplete="current-password"
-                        required 
-                        placeholder="••••••••"
-                        value={loginPassword}
-                        onChange={(e) => setLoginPassword(e.target.value)}
-                      />
+                      <div className="password-input-container">
+                        <input 
+                          type={showLoginPassword ? "text" : "password"} 
+                          id="login-password" 
+                          autoComplete="current-password"
+                          required 
+                          placeholder="••••••••"
+                          value={loginPassword}
+                          onChange={(e) => setLoginPassword(e.target.value)}
+                        />
+                        <button 
+                          type="button" 
+                          className="password-toggle-btn"
+                          onClick={() => setShowLoginPassword(!showLoginPassword)}
+                          aria-label={showLoginPassword ? "Hide password" : "Show password"}
+                        >
+                          {showLoginPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                        </button>
+                      </div>
                     </div>
                     <button type="submit" className="btn btn-primary btn-block">Log In</button>
                   </form>
@@ -461,15 +473,25 @@ function App() {
                     </div>
                     <div className="form-group">
                       <label htmlFor="reg-password">Password</label>
-                      <input 
-                        type="password" 
-                        id="reg-password" 
-                        autoComplete="new-password"
-                        required 
-                        placeholder="••••••••"
-                        value={regPassword}
-                        onChange={(e) => setRegPassword(e.target.value)}
-                      />
+                      <div className="password-input-container">
+                        <input 
+                          type={showRegPassword ? "text" : "password"} 
+                          id="reg-password" 
+                          autoComplete="new-password"
+                          required 
+                          placeholder="••••••••"
+                          value={regPassword}
+                          onChange={(e) => setRegPassword(e.target.value)}
+                        />
+                        <button 
+                          type="button" 
+                          className="password-toggle-btn"
+                          onClick={() => setShowRegPassword(!showRegPassword)}
+                          aria-label={showRegPassword ? "Hide password" : "Show password"}
+                        >
+                          {showRegPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                        </button>
+                      </div>
                       <span className="password-tip">At least 8 characters, 1 uppercase, 1 number, 1 special character.</span>
                     </div>
                     <button type="submit" className="btn btn-primary btn-block">Sign Up</button>

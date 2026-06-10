@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { X, Sun, Moon, Key } from 'lucide-react';
+import { X, Sun, Moon, Key, Eye, EyeOff } from 'lucide-react';
 import API from '../services/api';
 
 const ProfileModal = ({ isOpen, onClose }) => {
@@ -9,6 +9,9 @@ const ProfileModal = ({ isOpen, onClose }) => {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   if (!isOpen) return null;
@@ -109,42 +112,72 @@ const ProfileModal = ({ isOpen, onClose }) => {
               <form onSubmit={handlePasswordChange} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '0.5rem' }}>
                 <div className="form-group">
                   <label htmlFor="current-password" style={{ fontSize: '0.75rem', fontWeight: '500' }}>Current Password</label>
-                  <input 
-                    type="password" 
-                    id="current-password" 
-                    autoComplete="current-password"
-                    required 
-                    placeholder="Enter current password"
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
-                    style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem' }}
-                  />
+                  <div className="password-input-container">
+                    <input 
+                      type={showCurrentPassword ? "text" : "password"} 
+                      id="current-password" 
+                      autoComplete="current-password"
+                      required 
+                      placeholder="Enter current password"
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      style={{ padding: '0.4rem 2.5rem 0.4rem 0.6rem', fontSize: '0.85rem' }}
+                    />
+                    <button 
+                      type="button" 
+                      className="password-toggle-btn"
+                      onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                      aria-label={showCurrentPassword ? "Hide password" : "Show password"}
+                    >
+                      {showCurrentPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
                 </div>
                 <div className="form-group">
                   <label htmlFor="new-password" style={{ fontSize: '0.75rem', fontWeight: '500' }}>New Password</label>
-                  <input 
-                    type="password" 
-                    id="new-password" 
-                    autoComplete="new-password"
-                    required 
-                    placeholder="At least 8 chars, 1 upper, 1 number, 1 special"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem' }}
-                  />
+                  <div className="password-input-container">
+                    <input 
+                      type={showNewPassword ? "text" : "password"} 
+                      id="new-password" 
+                      autoComplete="new-password"
+                      required 
+                      placeholder="At least 8 chars, 1 upper, 1 number, 1 special"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      style={{ padding: '0.4rem 2.5rem 0.4rem 0.6rem', fontSize: '0.85rem' }}
+                    />
+                    <button 
+                      type="button" 
+                      className="password-toggle-btn"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      aria-label={showNewPassword ? "Hide password" : "Show password"}
+                    >
+                      {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
                 </div>
                 <div className="form-group">
                   <label htmlFor="confirm-password" style={{ fontSize: '0.75rem', fontWeight: '500' }}>Confirm New Password</label>
-                  <input 
-                    type="password" 
-                    id="confirm-password" 
-                    autoComplete="new-password"
-                    required 
-                    placeholder="Confirm new password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem' }}
-                  />
+                  <div className="password-input-container">
+                    <input 
+                      type={showConfirmPassword ? "text" : "password"} 
+                      id="confirm-password" 
+                      autoComplete="new-password"
+                      required 
+                      placeholder="Confirm new password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      style={{ padding: '0.4rem 2.5rem 0.4rem 0.6rem', fontSize: '0.85rem' }}
+                    />
+                    <button 
+                      type="button" 
+                      className="password-toggle-btn"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                    >
+                      {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
                 </div>
                 <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.25rem' }}>
                   <button 
