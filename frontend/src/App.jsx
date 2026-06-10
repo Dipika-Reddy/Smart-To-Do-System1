@@ -366,7 +366,7 @@ function App() {
       <div className="container auth-mode" id="landing-container">
         <header className="landing-header">
           <div className="logo">
-            <CheckCircle2 />
+            <img src="/logo.png" alt="SmartTodo Logo" style={{ width: '28px', height: '28px', objectFit: 'contain' }} />
             <span>SmartTodo</span>
           </div>
           <div className="landing-nav-btns">

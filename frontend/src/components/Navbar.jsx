@@ -23,7 +23,7 @@ const Navbar = ({ onOpenProfile, onOpenActivity, onOpenNotifications, onExportCs
   return (
     <nav className="app-navbar">
       <div className="logo">
-        <CheckCircle2 />
+        <img src="/logo.png" alt="SmartTodo Logo" style={{ width: '28px', height: '28px', objectFit: 'contain' }} />
         <span>SmartTodo</span>
         {currentUser && (
           <span className={`badge ${currentUser.role === 'Admin' ? 'badge-priority-high' : 'badge-priority-low'}`} style={{ marginLeft: '8px', fontSize: '0.7rem' }}>
