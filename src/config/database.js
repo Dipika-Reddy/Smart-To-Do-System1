@@ -6,9 +6,13 @@ let dbType = 'sqlite';
 let mysqlPool = null;
 let sqliteDb = null;
 let pgPool = null;
+let initError = null;
 
 // Unified query function to be exported
 let query = async (sql, params = []) => {
+  if (initError) {
+    throw new Error('Database initialization failed: ' + initError.message);
+  }
   throw new Error('Database not initialized');
 };
 
@@ -159,6 +163,7 @@ async function initDatabase() {
       return;
     } catch (error) {
       console.error('Supabase Connection failed. Error:', error.message);
+      initError = error;
       throw error;
     }
   }
