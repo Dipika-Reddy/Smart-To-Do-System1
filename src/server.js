@@ -8,6 +8,10 @@ const authRoutes = require('./routes/auth');
 const taskRoutes = require('./routes/tasks');
 const categoryRoutes = require('./routes/categories');
 const notesRoutes = require('./routes/notes');
+const usersRoutes = require('./routes/users');
+const checklistsRoutes = require('./routes/checklists');
+const notificationsRoutes = require('./routes/notifications');
+const analyticsRoutes = require('./routes/analytics');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -34,33 +38,54 @@ app.use((req, res, next) => {
   next();
 });
 
-// Serve frontend static files
-app.use(express.static(path.join(__dirname, 'public')));
+// Serve legacy frontend static files
+app.use('/legacy', express.static(path.join(__dirname, 'public')));
+
+// Serve React frontend static files (from build output)
+app.use(express.static(path.join(__dirname, 'public-react')));
 
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/notes', notesRoutes);
+app.use('/api/users', usersRoutes);
+app.use('/api/checklists', checklistsRoutes);
+app.use('/api/notifications', notificationsRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
-// Fallback to SPA Frontend for clean browser history navigation
-app.get('*', (req, res) => {
+// Fallback to Legacy SPA Frontend
+app.get('/legacy/*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+// Fallback to React SPA Frontend
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public-react', 'index.html'));
+});
+
 // Initialize database then start server
-db.initDatabase()
-  .then(() => {
-    app.listen(PORT, () => {
-      console.log(`=================================================`);
-      console.log(` Smart To-Do List Management System Server Running`);
-      console.log(` Port:    http://localhost:${PORT}`);
-      console.log(` Mode:    ${process.env.NODE_ENV || 'development'}`);
-      console.log(` DB:      ${db.getDbType().toUpperCase()}`);
-      console.log(`=================================================`);
+if (!process.env.VERCEL) {
+  db.initDatabase()
+    .then(() => {
+      app.listen(PORT, () => {
+        console.log(`=================================================`);
+        console.log(` Smart To-Do List Management System Server Running`);
+        console.log(` Port:    http://localhost:${PORT}`);
+        console.log(` Mode:    ${process.env.NODE_ENV || 'development'}`);
+        console.log(` DB:      ${db.getDbType().toUpperCase()}`);
+        console.log(`=================================================`);
+      });
+    })
+    .catch((err) => {
+      console.error('Fatal: Failed to initialize database on server start.', err);
+      process.exit(1);
     });
-  })
-  .catch((err) => {
-    console.error('Fatal: Failed to initialize database on server start.', err);
-    process.exit(1);
+} else {
+  // On Vercel, trigger database initialization immediately
+  db.initDatabase().catch(err => {
+    console.error('Fatal: Failed to initialize database on Vercel serverless load.', err.message);
   });
+}
+
+module.exports = app;

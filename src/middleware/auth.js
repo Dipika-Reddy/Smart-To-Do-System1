@@ -29,7 +29,33 @@ const authenticateToken = (req, res, next) => {
   }
 };
 
+const authorizeRoles = (...roles) => {
+  return (req, res, next) => {
+    if (!req.user) {
+      console.log(`[Auth Log] No user found on request to ${req.method} ${req.originalUrl}`);
+      return res.status(401).json({ error: 'Access denied. Please log in first.' });
+    }
+    
+    const userRole = (req.user.role || '').trim().toLowerCase();
+    
+    // Admins bypass all role restrictions
+    if (userRole === 'admin') {
+      return next();
+    }
+    
+    const normalizedRoles = roles.map(r => r.trim().toLowerCase());
+    
+    if (!normalizedRoles.includes(userRole)) {
+      console.log(`[Auth Log] Access Denied: User role is "${req.user.role}", requested endpoint requires one of [${roles.join(', ')}]`);
+      return res.status(403).json({ error: 'Access denied. Insufficient permissions.' });
+    }
+    
+    next();
+  };
+};
+
 module.exports = {
   authenticateToken,
+  authorizeRoles,
   JWT_SECRET
 };

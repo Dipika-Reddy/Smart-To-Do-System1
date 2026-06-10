@@ -1,5 +1,5 @@
 const validateRegister = (req, res, next) => {
-  const { username, email, password } = req.body;
+  const { username, email, password, role } = req.body;
 
   if (!username || !username.trim()) {
     return res.status(400).json({ error: 'Username is required.' });
@@ -43,6 +43,10 @@ const validateRegister = (req, res, next) => {
     return res.status(400).json({ error: 'Password must contain at least one special character (e.g., !@#$%^&*).' });
   }
 
+  if (role && !['Admin', 'User'].includes(role)) {
+    return res.status(400).json({ error: 'Role must be Admin or User.' });
+  }
+
   next();
 };
 
@@ -66,7 +70,7 @@ const validateTask = (req, res, next) => {
   const now = new Date();
   // We can strip seconds to avoid tiny discrepancies if submitted exactly now,
   // but a simple comparison checks if it is before the current millisecond.
-  if (parsedDueDate.getTime() < now.getTime()) {
+  if (req.method === 'POST' && parsedDueDate.getTime() < now.getTime()) {
     return res.status(400).json({ error: 'Due date cannot be in the past.' });
   }
 

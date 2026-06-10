@@ -7,6 +7,14 @@ const router = express.Router();
 // Apply auth to all note routes
 router.use(authenticateToken);
 
+// Block Admin access - Notes and Checklists are personal to users
+router.use((req, res, next) => {
+  if (req.user.role === 'Admin') {
+    return res.status(403).json({ error: 'Access denied. Notes and checklists are personal to users and cannot be accessed by administrators.' });
+  }
+  next();
+});
+
 const VALID_COLORS = ['default', 'yellow', 'blue', 'green', 'pink', 'purple', 'gray'];
 
 // GET /api/notes - Get all notes for the logged-in user
