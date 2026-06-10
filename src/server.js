@@ -56,6 +56,9 @@ app.use('/api/analytics', analyticsRoutes);
 
 // Fallback to Legacy SPA Frontend
 app.get('/legacy/*', (req, res) => {
+  if (req.path.includes('.')) {
+    return res.status(404).send('Asset not found');
+  }
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');
@@ -64,6 +67,9 @@ app.get('/legacy/*', (req, res) => {
 
 // Fallback to React SPA Frontend
 app.get('*', (req, res) => {
+  if (req.path.includes('.') || req.path.startsWith('/assets/')) {
+    return res.status(404).send('Asset not found');
+  }
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');

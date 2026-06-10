@@ -8,7 +8,7 @@ const ChecklistCard = ({ note, onEdit }) => {
   const [newFocusedItemId, setNewFocusedItemId] = useState(null);
 
   // Parsing and Sanitizing checklist items (providing unique IDs & originalIndex)
-  let rawItems = [];
+  let rawItems;
   try {
     rawItems = JSON.parse(note.content || '[]');
   } catch (e) {

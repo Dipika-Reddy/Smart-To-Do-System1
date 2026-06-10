@@ -235,10 +235,9 @@ const TaskCard = ({ task, onEdit, dragHandlers, isDraggable }) => {
     e.stopPropagation();
     try {
       const nextCompleted = item.is_completed ? 0 : 1;
-      const res = await API.updateChecklistItem(item.id, {
+      await API.updateChecklistItem(item.id, {
         is_completed: nextCompleted
       });
-      task.completion_percentage = res.completion_percentage;
       await loadChecklist();
       await syncAllData();
     } catch (err) {
