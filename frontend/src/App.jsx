@@ -370,9 +370,7 @@ function App() {
             <span>SmartTodo</span>
           </div>
           <div className="landing-nav-btns">
-            {selectedAuthRole === 'User' ? (
-              <a href="#admin" className="btn btn-ghost" onClick={() => { setSelectedAuthRole('Admin'); window.location.hash = '#admin'; }}>Admin Portal</a>
-            ) : (
+            {selectedAuthRole === 'Admin' && (
               <a href="#" className="btn btn-ghost" onClick={() => { setSelectedAuthRole('User'); window.location.hash = ''; }}>User Workspace</a>
             )}
           </div>
@@ -417,11 +415,7 @@ function App() {
                   </form>
                   <p className="switch-auth">Don't have an account? <a href="#" onClick={(e) => { e.preventDefault(); setAuthForm('register'); }}>Sign up</a></p>
 
-                  {selectedAuthRole === 'User' ? (
-                    <p className="switch-auth" style={{ marginTop: '1rem', borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
-                      Are you an administrator? <a href="#admin" onClick={(e) => { e.preventDefault(); window.location.hash = '#admin'; setSelectedAuthRole('Admin'); }}>Admin Sign In</a>
-                    </p>
-                  ) : (
+                  {selectedAuthRole === 'Admin' && (
                     <p className="switch-auth" style={{ marginTop: '1rem', borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
                       Not an admin? <a href="#" onClick={(e) => { e.preventDefault(); window.location.hash = ''; setSelectedAuthRole('User'); }}>User Sign In</a>
                     </p>
@@ -482,11 +476,7 @@ function App() {
                   </form>
                   <p className="switch-auth">Already have an account? <a href="#" onClick={(e) => { e.preventDefault(); setAuthForm('login'); }}>Log in</a></p>
 
-                  {selectedAuthRole === 'User' ? (
-                    <p className="switch-auth" style={{ marginTop: '1rem', borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
-                      Are you an administrator? <a href="#admin" onClick={(e) => { e.preventDefault(); window.location.hash = '#admin'; setSelectedAuthRole('Admin'); }}>Admin Sign In</a>
-                    </p>
-                  ) : (
+                  {selectedAuthRole === 'Admin' && (
                     <p className="switch-auth" style={{ marginTop: '1rem', borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
                       Not an admin? <a href="#" onClick={(e) => { e.preventDefault(); window.location.hash = ''; setSelectedAuthRole('User'); }}>User Sign In</a>
                     </p>
