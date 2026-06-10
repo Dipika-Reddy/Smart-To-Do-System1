@@ -1,5 +1,3 @@
-const mysql = require('mysql2/promise');
-const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const fs = require('fs');
 require('dotenv').config();
@@ -170,6 +168,7 @@ async function initDatabase() {
   if (useMysql) {
     try {
       console.log('Attempting to connect to MySQL database at:', process.env.DB_HOST);
+      const mysql = require('mysql2/promise');
       mysqlPool = mysql.createPool({
         host: process.env.DB_HOST,
         user: process.env.DB_USER,
@@ -198,7 +197,13 @@ async function initDatabase() {
   }
 
   // SQLite Fallback
+  // SQLite cannot be used on Vercel Serverless because it relies on compiled C++ native binaries.
+  if (process.env.VERCEL) {
+    throw new Error('SQLite database fallback is not supported in the Vercel Serverless environment. Please define SUPABASE_DB_URL in your Vercel Project Environment Variables.');
+  }
+
   console.log('Initializing SQLite fallback database...');
+  const sqlite3 = require('sqlite3').verbose();
   const dbPath = path.resolve(__dirname, '../../todo.db');
   
   sqliteDb = new sqlite3.Database(dbPath, (err) => {
