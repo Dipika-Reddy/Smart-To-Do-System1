@@ -1,29 +1,22 @@
 {
   "version": 2,
-  "builds": [
+  "rewrites": [
     {
-      "src": "src/server.js",
-      "use": "@vercel/node",
-      "config": {
-        "includeFiles": [
-          "public-react/**",
-          "public/**"
-        ]
-      }
+      "source": "/api/(.*)",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/legacy/(.*)",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/api/index.js"
     }
   ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "src/server.js"
-    },
-    {
-      "src": "/legacy/(.*)",
-      "dest": "src/server.js"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "src/server.js"
+  "functions": {
+    "api/index.js": {
+      "includeFiles": "src/public-react/**"
     }
-  ]
+  }
 }
