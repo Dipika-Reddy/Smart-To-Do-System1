@@ -206,7 +206,7 @@ router.post('/', authorizeRoles('Admin'), validateTask, async (req, res) => {
     const [result] = await db.query(
       `INSERT INTO tasks (
         user_id, title, description, category_id, priority, due_date, position, status, assigned_by, assigned_to
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, "Pending", ?, ?)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, 'Pending', ?, ?)`,
       [
         userId, 
         title.trim(), 

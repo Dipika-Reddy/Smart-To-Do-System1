@@ -419,6 +419,7 @@ function App() {
                         <input 
                           type="password" 
                           id="login-password" 
+                          autoComplete="current-password"
                           required 
                           placeholder="••••••••"
                           value={loginPassword}
@@ -472,6 +473,7 @@ function App() {
                         <input 
                           type="password" 
                           id="reg-password" 
+                          autoComplete="new-password"
                           required 
                           placeholder="••••••••"
                           value={regPassword}

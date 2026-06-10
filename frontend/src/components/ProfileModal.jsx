@@ -112,6 +112,7 @@ const ProfileModal = ({ isOpen, onClose }) => {
                   <input 
                     type="password" 
                     id="current-password" 
+                    autoComplete="current-password"
                     required 
                     placeholder="Enter current password"
                     value={currentPassword}
@@ -124,6 +125,7 @@ const ProfileModal = ({ isOpen, onClose }) => {
                   <input 
                     type="password" 
                     id="new-password" 
+                    autoComplete="new-password"
                     required 
                     placeholder="At least 8 chars, 1 upper, 1 number, 1 special"
                     value={newPassword}
@@ -136,6 +138,7 @@ const ProfileModal = ({ isOpen, onClose }) => {
                   <input 
                     type="password" 
                     id="confirm-password" 
+                    autoComplete="new-password"
                     required 
                     placeholder="Confirm new password"
                     value={confirmPassword}
