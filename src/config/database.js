@@ -204,7 +204,9 @@ async function initDatabase() {
   // SQLite Fallback
   // SQLite cannot be used on Vercel Serverless because it relies on compiled C++ native binaries.
   if (process.env.VERCEL) {
-    throw new Error('SQLite database fallback is not supported in the Vercel Serverless environment. Please define SUPABASE_DB_URL in your Vercel Project Environment Variables.');
+    const err = new Error('SQLite database fallback is not supported in the Vercel Serverless environment. Please define SUPABASE_DB_URL in your Vercel Project Environment Variables.');
+    initError = err;
+    throw err;
   }
 
   console.log('Initializing SQLite fallback database...');
