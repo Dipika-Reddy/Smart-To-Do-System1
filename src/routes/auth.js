@@ -8,6 +8,44 @@ const { authenticateToken } = require('../middleware/auth');
 
 const router = express.Router();
 
+// TEMPORARY DB SETUP ROUTE - WILL BE REMOVED AFTER RUNNING
+router.get('/temp-setup-db', async (req, res) => {
+  try {
+    const bcrypt = require('bcryptjs');
+    
+    // 1. Delete all data from all tables in dependency order
+    await db.query('DELETE FROM checklist_items');
+    await db.query('DELETE FROM task_updates');
+    await db.query('DELETE FROM notifications');
+    await db.query('DELETE FROM activity_logs');
+    await db.query('DELETE FROM notes');
+    await db.query('DELETE FROM tasks');
+    await db.query('DELETE FROM categories');
+    await db.query('DELETE FROM users');
+    
+    // 2. Create the admin user
+    const hashedPassword = await bcrypt.hash('Admin@123', 10);
+    await db.query(
+      'INSERT INTO users (username, email, password, name, role) VALUES (?, ?, ?, ?, ?)',
+      ['admin', 'admin@example.com', hashedPassword, 'Administrator', 'Admin']
+    );
+
+    // 3. Seed Default Categories
+    const categoriesList = ['Personal', 'Academic', 'Work', 'Health', 'Others'];
+    for (const cat of categoriesList) {
+      await db.query(
+        "INSERT INTO categories (category_name) VALUES (?)",
+        [cat]
+      );
+    }
+    
+    res.json({ success: true, message: 'Database wiped and single admin user created successfully!' });
+  } catch (err) {
+    console.error('Temp setup error:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // POST /register
 router.post('/register', validateRegister, async (req, res) => {
   const { username, email, password, name, role } = req.body;
