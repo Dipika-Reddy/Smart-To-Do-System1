@@ -79,21 +79,48 @@ function App() {
   // Auth screen state
   const [authRoleSelection, setAuthRoleSelection] = useState(false); // No landing selection screen by default
   const [selectedAuthRole, setSelectedAuthRole] = useState(
-    window.location.hash === '#admin' || window.location.search.includes('admin=true') ? 'Admin' : 'User'
+    window.location.hash === '#admin' || 
+    window.location.search.includes('admin=true') ||
+    window.location.pathname === '/admin' ||
+    window.location.pathname.startsWith('/admin/')
+      ? 'Admin'
+      : 'User'
   );
   const [authForm, setAuthForm] = useState('login'); // login | register
 
   useEffect(() => {
-    const handleHashChange = () => {
-      if (window.location.hash === '#admin') {
+    const handleHashAndPathChange = () => {
+      const isPathAdmin = window.location.hash === '#admin' || 
+                          window.location.pathname === '/admin' || 
+                          window.location.pathname.startsWith('/admin/');
+      if (isPathAdmin) {
         setSelectedAuthRole('Admin');
       } else if (window.location.hash === '#user' || !window.location.hash) {
-        setSelectedAuthRole('User');
+        if (window.location.pathname !== '/admin' && !window.location.pathname.startsWith('/admin/')) {
+          setSelectedAuthRole('User');
+        }
       }
     };
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
+    
+    handleHashAndPathChange();
+    window.addEventListener('hashchange', handleHashAndPathChange);
+    window.addEventListener('popstate', handleHashAndPathChange);
+    return () => {
+      window.removeEventListener('hashchange', handleHashAndPathChange);
+      window.removeEventListener('popstate', handleHashAndPathChange);
+    };
   }, []);
+
+  useEffect(() => {
+    if (currentUser && currentUser.role === 'Admin') {
+      const isPathAdmin = window.location.pathname === '/admin' || 
+                          window.location.pathname.startsWith('/admin/') || 
+                          window.location.hash === '#admin';
+      if (isPathAdmin) {
+        setActiveWorkspace('admin_dashboard');
+      }
+    }
+  }, [currentUser, setActiveWorkspace]);
   const [loginUsername, setLoginUsername] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [regUsername, setRegUsername] = useState('');
@@ -198,7 +225,10 @@ function App() {
       setLoginPassword('');
       // Route workspaces on login
       if (user.role === 'Admin') {
-        setActiveWorkspace('tasks');
+        const isPathAdmin = window.location.pathname === '/admin' || 
+                            window.location.pathname.startsWith('/admin/') || 
+                            window.location.hash === '#admin';
+        setActiveWorkspace(isPathAdmin ? 'admin_dashboard' : 'tasks');
       } else {
         setActiveWorkspace('tasks');
       }
@@ -429,7 +459,14 @@ function App() {
 
                   {selectedAuthRole === 'Admin' && (
                     <p className="switch-auth" style={{ marginTop: '1rem', borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
-                      Not an admin? <a href="#" onClick={(e) => { e.preventDefault(); window.location.hash = ''; setSelectedAuthRole('User'); }}>User Sign In</a>
+                      Not an admin? <a href="#" onClick={(e) => { 
+                        e.preventDefault(); 
+                        window.location.hash = ''; 
+                        if (window.location.pathname === '/admin' || window.location.pathname.startsWith('/admin/')) {
+                          window.history.pushState({}, '', '/');
+                        }
+                        setSelectedAuthRole('User'); 
+                      }}>User Sign In</a>
                     </p>
                   )}
                 </div>
