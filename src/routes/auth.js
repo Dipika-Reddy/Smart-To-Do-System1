@@ -25,12 +25,15 @@ router.post('/register', validateRegister, async (req, res) => {
     const fullName = name || username;
 
     // Save user
-    await db.query(
+    const [result] = await db.query(
       'INSERT INTO users (username, email, password, name, role) VALUES (?, ?, ?, ?, ?)',
       [username, email, hashedPassword, fullName, userRole]
     );
 
-    res.status(201).json({ message: 'Registration successful! You can now log in.' });
+    res.status(201).json({ 
+      message: 'Registration successful! You can now log in.',
+      userId: result.insertId
+    });
   } catch (error) {
     console.error('Registration error:', error);
     res.status(500).json({ error: error.message || 'Internal server error during registration.' });
@@ -46,13 +49,37 @@ router.post('/login', async (req, res) => {
   }
 
   try {
-    // Retrieve user strictly by username
-    const [users] = await db.query(
-      'SELECT * FROM users WHERE username = ?',
-      [username]
-    );
+    const input = username.trim();
+    let users = [];
+    const isNumeric = /^\d+$/.test(input);
+
+    if (isNumeric) {
+      // Look up by Employee ID (id) for User, fallback to Admin username
+      const [rows] = await db.query(
+        'SELECT * FROM users WHERE id = ? AND role = "User"',
+        [Number(input)]
+      );
+      if (rows.length > 0) {
+        users = rows;
+      } else {
+        const [adminRows] = await db.query(
+          'SELECT * FROM users WHERE username = ? AND role = "Admin"',
+          [input]
+        );
+        users = adminRows;
+      }
+    } else {
+      // Look up strictly by username
+      const [rows] = await db.query(
+        'SELECT * FROM users WHERE username = ?',
+        [input]
+      );
+      users = rows;
+    }
+
     if (users.length === 0) {
-      return res.status(400).json({ error: 'Invalid username or password.' });
+      const errorMsg = isNumeric ? 'Invalid Employee ID or password.' : 'Invalid username or password.';
+      return res.status(400).json({ error: errorMsg });
     }
 
     const user = users[0];
@@ -60,7 +87,8 @@ router.post('/login', async (req, res) => {
     // Check password
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      return res.status(400).json({ error: 'Invalid username or password.' });
+      const errorMsg = isNumeric ? 'Invalid Employee ID or password.' : 'Invalid username or password.';
+      return res.status(400).json({ error: errorMsg });
     }
 
     // Generate JWT token including name and role

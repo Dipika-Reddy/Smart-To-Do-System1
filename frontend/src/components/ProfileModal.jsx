@@ -63,6 +63,9 @@ const ProfileModal = ({ isOpen, onClose }) => {
           <div className="profile-section">
             <h4>Account Details</h4>
             <div className="profile-info-grid">
+              {currentUser?.role !== 'Admin' && (
+                <div><strong>Employee ID:</strong> <span>{currentUser?.id}</span></div>
+              )}
               <div><strong>Username:</strong> <span>{currentUser?.username || 'User'}</span></div>
               <div><strong>Email:</strong> <span>{currentUser?.email || 'you@example.com'}</span></div>
             </div>

@@ -100,7 +100,7 @@ async function runTests() {
     // 4. Login as User
     console.log('Test 4: Log in as User...');
     const userLogin = await request('/api/auth/login', 'POST', {
-      username: 'APITesterUser',
+      username: String(regUser.body.userId),
       password: 'SecurePassword123!'
     });
     console.log(`-> Status: ${userLogin.status} (Expected: 200)`);

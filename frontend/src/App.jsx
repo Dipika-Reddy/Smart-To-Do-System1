@@ -268,10 +268,18 @@ function App() {
     }
 
     try {
-      await registerUser(regUsername, regEmail, regPassword, regFullName, selectedAuthRole);
+      const res = await registerUser(regUsername, regEmail, regPassword, regFullName, selectedAuthRole);
       // Switch back to login form
       setAuthForm('login');
-      setLoginUsername(regUsername);
+      if (selectedAuthRole === 'User') {
+        const uid = res && res.userId ? String(res.userId) : '';
+        setLoginUsername(uid);
+        if (uid) {
+          showToast(`Registration successful! Your Employee ID is ${uid}. Please use it to log in.`, 'success');
+        }
+      } else {
+        setLoginUsername(regUsername);
+      }
       setRegUsername('');
       setRegFullName('');
       setRegEmail('');
@@ -425,12 +433,14 @@ function App() {
                   <p className="subtitle">Enter credentials to load dashboard</p>
                   <form id="login-form" onSubmit={handleLoginSubmit}>
                     <div className="form-group">
-                      <label htmlFor="login-username">Username</label>
+                      <label htmlFor="login-username">
+                        {selectedAuthRole === 'Admin' ? 'Username' : 'Employee ID'}
+                      </label>
                       <input 
                         type="text" 
                         id="login-username" 
                         required 
-                        placeholder="Enter your username"
+                        placeholder={selectedAuthRole === 'Admin' ? 'Enter your username' : 'Enter your Employee ID'}
                         value={loginUsername}
                         onChange={(e) => setLoginUsername(e.target.value)}
                       />
