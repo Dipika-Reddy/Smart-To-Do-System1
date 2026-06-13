@@ -33,14 +33,14 @@ const API = {
   async register(username, email, password, name = '', role = 'User') {
     return this.request('/api/auth/register', {
       method: 'POST',
-      body: JSON.stringify({ username, email, password, name, role })
+      body: JSON.stringify({ employee_id: username, username, email, password, name, role })
     });
   },
 
-  async login(username, password) {
+  async login(username, password, role = 'User') {
     return this.request('/api/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ username, password })
+      body: JSON.stringify({ username, password, role })
     });
   },
 

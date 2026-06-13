@@ -220,7 +220,7 @@ function App() {
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
     try {
-      const user = await loginUser(loginUsername, loginPassword);
+      const user = await loginUser(loginUsername, loginPassword, selectedAuthRole);
       // Validate role choice match (Warn if logging into mismatched roles, but log them in anyway)
       if (user.role !== selectedAuthRole) {
         showToast(`Logged in as ${user.role} (Selection was: ${selectedAuthRole})`, 'info');

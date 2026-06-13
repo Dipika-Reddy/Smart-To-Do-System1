@@ -286,9 +286,9 @@ export const AppProvider = ({ children }) => {
     checkSession();
   }, []);
 
-  const loginUser = async (username, password) => {
+  const loginUser = async (username, password, role) => {
     try {
-      const data = await API.login(username, password);
+      const data = await API.login(username, password, role);
       setCurrentUser(data.user);
       showToast('Logged in successfully.', 'success');
       return data.user;

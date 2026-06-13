@@ -10,7 +10,8 @@ const router = express.Router();
 
 // POST /register
 router.post('/register', validateRegister, async (req, res) => {
-  const { username, email, password, name, role } = req.body;
+  const { employee_id, username, email, password, name, role } = req.body;
+  const finalEmpId = employee_id || username;
 
   try {
     // Check if email already exists
@@ -22,12 +23,12 @@ router.post('/register', validateRegister, async (req, res) => {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
     const userRole = role || 'User';
-    const fullName = name || username;
+    const fullName = name || finalEmpId;
 
     // Save user
     const [result] = await db.query(
-      'INSERT INTO users (username, email, password, name, role) VALUES (?, ?, ?, ?, ?)',
-      [username, email, hashedPassword, fullName, userRole]
+      'INSERT INTO users (employee_id, email, password, name, role) VALUES (?, ?, ?, ?, ?)',
+      [finalEmpId, email, hashedPassword, fullName, userRole]
     );
 
     res.status(201).json({ 
@@ -42,43 +43,25 @@ router.post('/register', validateRegister, async (req, res) => {
 
 // POST /login
 router.post('/login', async (req, res) => {
-  const { username, password } = req.body;
+  const { username, password, role } = req.body;
 
   if (!username || !password) {
-    return res.status(400).json({ error: 'Username and password are required.' });
+    return res.status(400).json({ error: 'Employee ID/Username and password are required.' });
   }
 
   try {
     const input = username.trim();
-    let users = [];
-    const isNumeric = /^\d+$/.test(input);
+    // Default the role guess to 'User' if the input format looks like numeric or if explicitly provided
+    const loginRole = role || ( /^\d+$/.test(input) ? 'User' : 'Admin' );
 
-    if (isNumeric) {
-      // Look up by Employee ID (id) for User, fallback to Admin username
-      const [rows] = await db.query(
-        'SELECT * FROM users WHERE id = ? AND role = "User"',
-        [Number(input)]
-      );
-      if (rows.length > 0) {
-        users = rows;
-      } else {
-        const [adminRows] = await db.query(
-          'SELECT * FROM users WHERE username = ? AND role = "Admin"',
-          [input]
-        );
-        users = adminRows;
-      }
-    } else {
-      // Look up strictly by username
-      const [rows] = await db.query(
-        'SELECT * FROM users WHERE username = ?',
-        [input]
-      );
-      users = rows;
-    }
+    // Look up by employee_id column
+    const [users] = await db.query(
+      'SELECT * FROM users WHERE employee_id = ?',
+      [input]
+    );
 
     if (users.length === 0) {
-      const errorMsg = isNumeric ? 'Invalid Employee ID or password.' : 'Invalid username or password.';
+      const errorMsg = loginRole === 'User' ? 'Invalid Employee ID or password.' : 'Invalid username or password.';
       return res.status(400).json({ error: errorMsg });
     }
 
@@ -87,13 +70,13 @@ router.post('/login', async (req, res) => {
     // Check password
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      const errorMsg = isNumeric ? 'Invalid Employee ID or password.' : 'Invalid username or password.';
+      const errorMsg = user.role === 'User' ? 'Invalid Employee ID or password.' : 'Invalid username or password.';
       return res.status(400).json({ error: errorMsg });
     }
 
     // Generate JWT token including name and role
     const token = jwt.sign(
-      { id: user.id, username: user.username, email: user.email, name: user.name, role: user.role },
+      { id: user.id, employee_id: user.employee_id, username: user.employee_id, email: user.email, name: user.name, role: user.role },
       JWT_SECRET,
       { expiresIn: '24h' }
     );
@@ -110,7 +93,8 @@ router.post('/login', async (req, res) => {
       message: 'Login successful.',
       user: {
         id: user.id,
-        username: user.username,
+        employee_id: user.employee_id,
+        username: user.employee_id,
         email: user.email,
         name: user.name,
         role: user.role
@@ -193,7 +177,7 @@ router.post('/crm-login', async (req, res) => {
   try {
     const todoRole = role === 'admin' ? 'Admin' : 'User';
     const email = `${empId.toLowerCase()}@hps.internal`;
-    const username = empId.toLowerCase();
+    const employee_id = empId.toLowerCase();
 
     // Find or create user
     const [existing] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
@@ -210,15 +194,15 @@ router.post('/crm-login', async (req, res) => {
       const bcrypt = require('bcryptjs');
       const dummyPassword = await bcrypt.hash(empId + '_hps', 10);
       const [result] = await db.query(
-        'INSERT INTO users (username, email, password, name, role) VALUES (?, ?, ?, ?, ?)',
-        [username, email, dummyPassword, name, todoRole]
+        'INSERT INTO users (employee_id, email, password, name, role) VALUES (?, ?, ?, ?, ?)',
+        [employee_id, email, dummyPassword, name, todoRole]
       );
       userId = result.insertId;
     }
 
     // Generate JWT
     const token = jwt.sign(
-      { id: userId, username, email, name, role: todoRole },
+      { id: userId, employee_id, username: employee_id, email, name, role: todoRole },
       JWT_SECRET,
       { expiresIn: '24h' }
     );
@@ -230,7 +214,7 @@ router.post('/crm-login', async (req, res) => {
       maxAge: 24 * 60 * 60 * 1000
     });
 
-    res.json({ message: 'Auto login successful.', user: { id: userId, username, name, role: todoRole } });
+    res.json({ message: 'Auto login successful.', user: { id: userId, employee_id, username: employee_id, name, role: todoRole } });
   } catch (error) {
     console.error('CRM login error:', error);
     res.status(500).json({ error: 'Auto login failed.' });

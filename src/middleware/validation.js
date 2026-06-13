@@ -1,8 +1,9 @@
 const validateRegister = (req, res, next) => {
-  const { username, email, password, role } = req.body;
+  const { employee_id, username, email, password, role } = req.body;
+  const targetEmpId = employee_id || username;
 
-  if (!username || !username.trim()) {
-    return res.status(400).json({ error: 'Username is required.' });
+  if (!targetEmpId || !targetEmpId.trim()) {
+    return res.status(400).json({ error: 'Employee ID is required.' });
   }
 
   if (!email || !email.trim()) {
