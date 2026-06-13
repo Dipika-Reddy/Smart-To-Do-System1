@@ -57,7 +57,7 @@ router.post('/login', async (req, res) => {
 
     // Look up by employee_id for User OR username for Admin
     const [users] = await db.query(
-      'SELECT * FROM users WHERE (employee_id = ? AND role = "User") OR (username = ? AND role = "Admin")',
+      "SELECT * FROM users WHERE (employee_id = ? AND role = 'User') OR (username = ? AND role = 'Admin')",
       [input, input]
     );
 
