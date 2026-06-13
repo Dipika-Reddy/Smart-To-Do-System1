@@ -154,4 +154,58 @@ router.put('/change-password', authenticateToken, async (req, res) => {
   }
 });
 
+// POST /crm-login — Auto login from CRM session
+router.post('/crm-login', async (req, res) => {
+  const { empId, name, role } = req.body;
+
+  if (!empId || !name) {
+    return res.status(400).json({ error: 'Missing employee info.' });
+  }
+
+  try {
+    const todoRole = role === 'admin' ? 'Admin' : 'User';
+    const email = `${empId.toLowerCase()}@hps.internal`;
+    const username = empId.toLowerCase();
+
+    // Find or create user
+    const [existing] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
+
+    let userId;
+    if (existing.length > 0) {
+      userId = existing[0].id;
+      // Update name/role in case it changed
+      await db.query(
+        'UPDATE users SET name = ?, role = ? WHERE id = ?',
+        [name, todoRole, userId]
+      );
+    } else {
+      const bcrypt = require('bcryptjs');
+      const dummyPassword = await bcrypt.hash(empId + '_hps', 10);
+      const [result] = await db.query(
+        'INSERT INTO users (username, email, password, name, role) VALUES (?, ?, ?, ?, ?)',
+        [username, email, dummyPassword, name, todoRole]
+      );
+      userId = result.insertId;
+    }
+
+    // Generate JWT
+    const token = jwt.sign(
+      { id: userId, username, email, name, role: todoRole },
+      JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'none',  // important for cross-origin iframe
+      maxAge: 24 * 60 * 60 * 1000
+    });
+
+    res.json({ message: 'Auto login successful.', user: { id: userId, username, name, role: todoRole } });
+  } catch (error) {
+    console.error('CRM login error:', error);
+    res.status(500).json({ error: 'Auto login failed.' });
+  }
+});
 module.exports = router;

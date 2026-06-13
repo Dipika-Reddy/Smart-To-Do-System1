@@ -248,6 +248,27 @@ export const AppProvider = ({ children }) => {
   const checkSession = async () => {
     try {
       setAuthLoading(true);
+
+      const params = new URLSearchParams(window.location.search);
+      const crmEmpId = params.get('crm_emp');
+      const crmName = params.get('crm_name');
+      const crmRole = params.get('crm_role');
+
+      if (crmEmpId && crmName) {
+        const loginRes = await fetch('/api/auth/crm-login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ empId: crmEmpId, name: crmName, role: crmRole })
+        });
+        const loginData = await loginRes.json();
+        if (loginRes.ok) {
+          setCurrentUser(loginData.user);
+          window.history.replaceState({}, '', window.location.pathname);
+          return;
+        }
+      }
+
       const data = await API.getMe();
       if (data && data.user) {
         setCurrentUser(data.user);

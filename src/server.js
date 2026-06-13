@@ -23,7 +23,10 @@ app.use(cookieParser());
 
 // CORS Protections (Security requirement)
 app.use((req, res, next) => {
-  const allowedOrigins = [process.env.CORS_ORIGIN || 'http://localhost:3000'];
+  const allowedOrigins = [
+  process.env.CORS_ORIGIN || 'http://localhost:3000',
+  'https://hps-crm.vercel.app'
+];
   const origin = req.headers.origin;
   if (allowedOrigins.includes(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
