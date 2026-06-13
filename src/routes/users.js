@@ -10,7 +10,7 @@ router.use(authenticateToken);
 router.get('/', async (req, res) => {
   try {
     const [rows] = await db.query(
-      'SELECT id, employee_id, employee_id AS username, email, name, role, created_at FROM users ORDER BY employee_id ASC'
+      'SELECT id, employee_id, username, email, name, role, created_at FROM users ORDER BY username ASC'
     );
     res.json(rows);
   } catch (error) {

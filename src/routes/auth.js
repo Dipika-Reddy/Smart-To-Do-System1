@@ -11,7 +11,9 @@ const router = express.Router();
 // POST /register
 router.post('/register', validateRegister, async (req, res) => {
   const { employee_id, username, email, password, name, role } = req.body;
-  const finalEmpId = employee_id || username;
+  const userRole = role || 'User';
+  const dbEmployeeId = userRole === 'Admin' ? null : (employee_id || username);
+  const dbUsername = username;
 
   try {
     // Check if email already exists
@@ -22,13 +24,12 @@ router.post('/register', validateRegister, async (req, res) => {
 
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
-    const userRole = role || 'User';
-    const fullName = name || finalEmpId;
+    const fullName = name || dbUsername;
 
     // Save user
     const [result] = await db.query(
-      'INSERT INTO users (employee_id, email, password, name, role) VALUES (?, ?, ?, ?, ?)',
-      [finalEmpId, email, hashedPassword, fullName, userRole]
+      'INSERT INTO users (employee_id, username, email, password, name, role) VALUES (?, ?, ?, ?, ?, ?)',
+      [dbEmployeeId, dbUsername, email, hashedPassword, fullName, userRole]
     );
 
     res.status(201).json({ 
@@ -54,10 +55,10 @@ router.post('/login', async (req, res) => {
     // Default the role guess to 'User' if the input format looks like numeric or if explicitly provided
     const loginRole = role || ( /^\d+$/.test(input) ? 'User' : 'Admin' );
 
-    // Look up by employee_id column
+    // Look up by employee_id for User OR username for Admin
     const [users] = await db.query(
-      'SELECT * FROM users WHERE employee_id = ?',
-      [input]
+      'SELECT * FROM users WHERE (employee_id = ? AND role = "User") OR (username = ? AND role = "Admin")',
+      [input, input]
     );
 
     if (users.length === 0) {
@@ -76,7 +77,7 @@ router.post('/login', async (req, res) => {
 
     // Generate JWT token including name and role
     const token = jwt.sign(
-      { id: user.id, employee_id: user.employee_id, username: user.employee_id, email: user.email, name: user.name, role: user.role },
+      { id: user.id, employee_id: user.employee_id, username: user.username, email: user.email, name: user.name, role: user.role },
       JWT_SECRET,
       { expiresIn: '24h' }
     );
@@ -94,7 +95,7 @@ router.post('/login', async (req, res) => {
       user: {
         id: user.id,
         employee_id: user.employee_id,
-        username: user.employee_id,
+        username: user.username,
         email: user.email,
         name: user.name,
         role: user.role

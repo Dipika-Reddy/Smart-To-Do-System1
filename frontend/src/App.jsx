@@ -271,14 +271,9 @@ function App() {
       const res = await registerUser(regUsername, regEmail, regPassword, regFullName, selectedAuthRole);
       // Switch back to login form
       setAuthForm('login');
+      setLoginUsername(regUsername);
       if (selectedAuthRole === 'User') {
-        const uid = res && res.userId ? String(res.userId) : '';
-        setLoginUsername(uid);
-        if (uid) {
-          showToast(`Registration successful! Your Employee ID is ${uid}. Please use it to log in.`, 'success');
-        }
-      } else {
-        setLoginUsername(regUsername);
+        showToast(`Registration successful! Your Employee ID is ${regUsername}. Please use it to log in.`, 'success');
       }
       setRegUsername('');
       setRegFullName('');

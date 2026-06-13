@@ -65,7 +65,7 @@ router.get('/dashboard', async (req, res) => {
 router.get('/performance', authorizeRoles('Admin'), async (req, res) => {
   try {
     // Get all users
-    const [users] = await db.query('SELECT id, name, employee_id AS username, email, role FROM users');
+    const [users] = await db.query('SELECT id, name, username, email, role FROM users');
     
     // Get all tasks
     const [tasks] = await db.query('SELECT * FROM tasks');

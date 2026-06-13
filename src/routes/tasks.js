@@ -47,7 +47,7 @@ async function createNotification(userId, title, message) {
 router.get('/activities', async (req, res) => {
   try {
     let sql = `
-      SELECT a.*, u.employee_id AS username,
+      SELECT a.*, u.username,
              COALESCE(t1.title, t2.title) AS task_title
       FROM activity_logs a 
       LEFT JOIN users u ON a.user_id = u.id 
@@ -85,8 +85,8 @@ const getTasks = async (req, res) => {
   try {
     let sql = `
       SELECT t.*, c.category_name,
-             u1.employee_id AS creator_name,
-             u2.employee_id AS assignee_name
+             u1.username AS creator_name,
+             u2.username AS assignee_name
       FROM tasks t
       LEFT JOIN categories c ON t.category_id = c.id
       LEFT JOIN users u1 ON t.user_id = u1.id
@@ -122,7 +122,7 @@ const getTasks = async (req, res) => {
 
     // Search
     if (search && search.trim()) {
-      sql += " AND (t.title LIKE ? OR t.description LIKE ? OR c.category_name LIKE ? OR u2.employee_id LIKE ?)";
+      sql += " AND (t.title LIKE ? OR t.description LIKE ? OR c.category_name LIKE ? OR u2.username LIKE ?)";
       const wildcard = `%${search.trim()}%`;
       params.push(wildcard, wildcard, wildcard, wildcard);
     }
@@ -161,8 +161,8 @@ router.get('/:id', async (req, res) => {
   try {
     const [rows] = await db.query(
       `SELECT t.*, c.category_name,
-              u1.employee_id AS creator_name,
-              u2.employee_id AS assignee_name
+              u1.username AS creator_name,
+              u2.username AS assignee_name
        FROM tasks t 
        LEFT JOIN categories c ON t.category_id = c.id 
        LEFT JOIN users u1 ON t.user_id = u1.id
@@ -531,7 +531,7 @@ router.get('/:id/updates', async (req, res) => {
     }
 
     const [rows] = await db.query(
-      `SELECT tu.*, u.employee_id AS username, u.name 
+      `SELECT tu.*, u.username, u.name 
        FROM task_updates tu 
        LEFT JOIN users u ON tu.user_id = u.id 
        WHERE tu.task_id = ? 
