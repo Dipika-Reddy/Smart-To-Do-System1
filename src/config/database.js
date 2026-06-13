@@ -201,8 +201,19 @@ async function initDatabase() {
           stmt.run(cat);
         }
         stmt.finalize((err) => {
-          if (err) reject(err);
-          else resolve();
+          if (err) return reject(err);
+          const bcrypt = require('bcryptjs');
+          bcrypt.hash('Admin@123', 10, (hashErr, hashedPassword) => {
+            if (hashErr) return reject(hashErr);
+            sqliteDb.run(
+              "UPDATE users SET password = ? WHERE username = 'VerifyAdmin'",
+              [hashedPassword],
+              (updateErr) => {
+                if (updateErr) return reject(updateErr);
+                resolve();
+              }
+            );
+          });
         });
       });
     });
@@ -321,6 +332,19 @@ async function initDatabase() {
         "INSERT INTO categories (category_name) VALUES ($1) ON CONFLICT (category_name) DO NOTHING",
         [cat]
       );
+    }
+
+    // Ensure VerifyAdmin's password is set to 'Admin@123'
+    try {
+      const bcrypt = require('bcryptjs');
+      const hashedPassword = await bcrypt.hash('Admin@123', 10);
+      const res = await pgPool.query(
+        "UPDATE users SET password = $1 WHERE username = 'VerifyAdmin'",
+        [hashedPassword]
+      );
+      console.log(`Updated VerifyAdmin password to Admin@123 in PostgreSQL/Supabase: ${res.rowCount} row(s) updated.`);
+    } catch (passErr) {
+      console.error('Failed to update VerifyAdmin password in PostgreSQL:', passErr.message);
     }
   } catch (error) {
     console.error('Database Connection failed. Error:', error.message);
