@@ -49,8 +49,12 @@ function App() {
     globalDashboardStats,
     userPerformance,
     chartDistributions,
-    syncAllData
+    syncAllData,
+    users
   } = useApp();
+
+  // Filter by user selection for Admin Dashboard
+  const [selectedUserFilter, setSelectedUserFilter] = useState('');
 
   // Modal Open States
   const [taskModalOpen, setTaskModalOpen] = useState(false);
@@ -555,11 +559,12 @@ function App() {
 
   // Filter tasks arrays for Kanban display
   const kanbanTasks = tasks.filter(task => {
+    const matchesUserFilter = !selectedUserFilter || task.assigned_to === Number(selectedUserFilter);
     if (currentUser.role === 'Admin') {
-      return true; // Admin sees all
+      return matchesUserFilter; // Admin sees all matching selection
     }
-    // Users see their own tasks (created by them) and tasks assigned to them
-    return task.user_id === currentUser.id || task.assigned_to === currentUser.id;
+    // Users see their own tasks (created by them) and tasks assigned to them, matching filter selection
+    return (task.user_id === currentUser.id || task.assigned_to === currentUser.id) && matchesUserFilter;
   });
 
   const columns = [
@@ -624,28 +629,49 @@ function App() {
                 )}
               </section>
 
-              {/* Categories dropdown below sort cards */}
-              <div className="categories-filter-bar" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--bg-secondary)', padding: '0.5rem 0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', maxWidth: 'fit-content' }}>
-                <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Categories:</span>
-                <select 
-                  className="form-control" 
-                  style={{ width: '180px', padding: '0.35rem 0.75rem', fontSize: '0.85rem', height: 'auto' }}
-                  value={activeFilters.category_id}
-                  onChange={(e) => setActiveFilters(prev => ({ ...prev, category_id: e.target.value }))}
-                >
-                  <option value="">All Categories</option>
-                  {categories.map(cat => (
-                    <option key={cat.id} value={cat.id}>{cat.category_name}</option>
-                  ))}
-                </select>
-                <button 
-                  className="btn-icon-small" 
-                  onClick={() => setCategoryModalOpen(true)}
-                  title="Manage Categories"
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                >
-                  <Settings size={14} />
-                </button>
+              {/* Filters container */}
+              <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                {/* Categories dropdown below sort cards */}
+                <div className="categories-filter-bar" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--bg-secondary)', padding: '0.5rem 0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', maxWidth: 'fit-content' }}>
+                  <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Categories:</span>
+                  <select 
+                    className="form-control" 
+                    style={{ width: '180px', padding: '0.35rem 0.75rem', fontSize: '0.85rem', height: 'auto' }}
+                    value={activeFilters.category_id}
+                    onChange={(e) => setActiveFilters(prev => ({ ...prev, category_id: e.target.value }))}
+                  >
+                    <option value="">All Categories</option>
+                    {categories.map(cat => (
+                      <option key={cat.id} value={cat.id}>{cat.category_name}</option>
+                    ))}
+                  </select>
+                  <button 
+                    className="btn-icon-small" 
+                    onClick={() => setCategoryModalOpen(true)}
+                    title="Manage Categories"
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  >
+                    <Settings size={14} />
+                  </button>
+                </div>
+
+                {/* Users filter dropdown - only accessible by Admin */}
+                {currentUser?.role === 'Admin' && (
+                  <div className="users-filter-bar" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--bg-secondary)', padding: '0.5rem 0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', maxWidth: 'fit-content' }}>
+                    <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Filter by User:</span>
+                    <select 
+                      className="form-control" 
+                      style={{ width: '180px', padding: '0.35rem 0.75rem', fontSize: '0.85rem', height: 'auto' }}
+                      value={selectedUserFilter}
+                      onChange={(e) => setSelectedUserFilter(e.target.value)}
+                    >
+                      <option value="">All Users</option>
+                      {users.map(u => (
+                        <option key={u.id} value={u.id}>{u.name || u.username} ({u.role})</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </div>
 
               {/* Kanban Column Grids */}
@@ -681,7 +707,7 @@ function App() {
                         </span>
                       </div>
 
-                      <div className="kanban-task-list" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxHeight: '340px', overflowY: 'auto' }}>
+                      <div className="kanban-task-list" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxHeight: 'calc(100vh - 380px)', overflowY: 'auto' }}>
                         {colTasks.map(task => (
                           <TaskCard 
                             key={task.id} 
@@ -706,125 +732,168 @@ function App() {
           )}
 
           {/* 2. ADMIN MONITORING DASHBOARD */}
-          {activeWorkspace === 'admin_dashboard' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-              <div className="workspace-header-bar">
-                <h2>Analytics Dashboard</h2>
-              </div>
+          {activeWorkspace === 'admin_dashboard' && (() => {
+            const filteredTasksForAdmin = selectedUserFilter
+              ? tasks.filter(t => t.assigned_to === Number(selectedUserFilter))
+              : tasks;
 
-              {/* Status aggregates */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem' }}>
-                <div className="stat-card" style={{ borderLeft: '4px solid var(--primary-color)' }}>
-                  <h4>{globalDashboardStats.total}</h4>
-                  <p>Total Tasks</p>
-                </div>
-                <div className="stat-card" style={{ borderLeft: '4px solid #6b7280' }}>
-                  <h4>{globalDashboardStats.pending}</h4>
-                  <p>Pending</p>
-                </div>
-                <div className="stat-card" style={{ borderLeft: '4px solid #8b5cf6' }}>
-                  <h4>{globalDashboardStats.inProgress}</h4>
-                  <p>In Progress</p>
-                </div>
-                <div className="stat-card" style={{ borderLeft: '4px solid #f59e0b' }}>
-                  <h4>{globalDashboardStats.review}</h4>
-                  <p>Pending Review</p>
-                </div>
-                <div className="stat-card" style={{ borderLeft: '4px solid #10b981' }}>
-                  <h4>{globalDashboardStats.completed}</h4>
-                  <p>Completed</p>
-                </div>
-                <div className="stat-card" style={{ borderLeft: '4px solid #ef4444' }}>
-                  <h4>{globalDashboardStats.overdue}</h4>
-                  <p>Overdue</p>
-                </div>
-              </div>
+            const now = new Date();
+            const displayStats = !selectedUserFilter
+              ? globalDashboardStats
+              : {
+                  total: filteredTasksForAdmin.length,
+                  pending: filteredTasksForAdmin.filter(t => t.status === 'Pending').length,
+                  inProgress: filteredTasksForAdmin.filter(t => t.status === 'In Progress').length,
+                  review: filteredTasksForAdmin.filter(t => t.status === 'Review').length,
+                  completed: filteredTasksForAdmin.filter(t => t.status === 'Completed').length,
+                  overdue: filteredTasksForAdmin.filter(t => t.status !== 'Completed' && new Date(t.due_date) < now).length,
+                };
 
-              {/* Categories filter dropdown above the task tracking table */}
-              <div className="categories-filter-bar" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--bg-secondary)', padding: '0.5rem 0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', maxWidth: 'fit-content' }}>
-                <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Categories:</span>
-                <select 
-                  className="form-control" 
-                  style={{ width: '180px', padding: '0.35rem 0.75rem', fontSize: '0.85rem', height: 'auto' }}
-                  value={activeFilters.category_id}
-                  onChange={(e) => setActiveFilters(prev => ({ ...prev, category_id: e.target.value }))}
-                >
-                  <option value="">All Categories</option>
-                  {categories.map(cat => (
-                    <option key={cat.id} value={cat.id}>{cat.category_name}</option>
-                  ))}
-                </select>
-                <button 
-                  className="btn-icon-small" 
-                  onClick={() => setCategoryModalOpen(true)}
-                  title="Manage Categories"
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                >
-                  <Settings size={14} />
-                </button>
-              </div>
+            return (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                <div className="workspace-header-bar">
+                  <h2>Analytics Dashboard</h2>
+                </div>
 
-              {/* Tasks overview tabular layout */}
-              <div style={{ background: 'var(--bg-secondary)', borderRadius: '12px', padding: '1.5rem', border: '1px solid var(--border-color)' }}>
-                <h3 style={{ marginBottom: '1rem' }}>General Task Assignment Tracking</h3>
-                <div style={{ overflowX: 'auto' }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
-                    <thead>
-                      <tr style={{ textAlign: 'left', borderBottom: '2px solid var(--border-color)', paddingBottom: '0.5rem', color: 'var(--text-muted)' }}>
-                        <th style={{ padding: '0.5rem' }}>Task Title</th>
-                        <th style={{ padding: '0.5rem' }}>Assignee</th>
-                        <th style={{ padding: '0.5rem' }}>Priority</th>
-                        <th style={{ padding: '0.5rem' }}>Status</th>
-                        <th style={{ padding: '0.5rem' }}>Progress</th>
-                        <th style={{ padding: '0.5rem' }}>Due Date</th>
-                        <th style={{ padding: '0.5rem' }}>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {tasks.map(t => (
-                        <tr key={t.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                          <td style={{ padding: '0.75rem 0.5rem' }}>
-                            <strong>{t.title}</strong>
-                            {t.category_name && <span className="badge badge-category" style={{ marginLeft: '4px', fontSize: '0.65rem' }}>{t.category_name}</span>}
-                          </td>
-                          <td style={{ padding: '0.75rem 0.5rem' }}>{t.assignee_name || 'Unassigned'}</td>
-                          <td style={{ padding: '0.75rem 0.5rem' }}>
-                            <span className={`badge badge-priority-${t.priority.toLowerCase()}`}>{t.priority}</span>
-                          </td>
-                          <td style={{ padding: '0.75rem 0.5rem' }}>
-                            <span className="badge" style={{ backgroundColor: t.status === 'Review' ? '#f59e0b' : (t.status === 'Completed' ? '#10b981' : '#3b82f6'), color: '#fff' }}>
-                              {t.status}
-                            </span>
-                          </td>
-                          <td style={{ padding: '0.75rem 0.5rem', width: '120px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                              <div style={{ flex: 1, height: '4px', background: 'var(--border-color)', borderRadius: '2px', overflow: 'hidden' }}>
-                                <div style={{ width: `${t.completion_percentage}%`, height: '100%', background: 'var(--primary-color)' }} />
-                              </div>
-                              <span style={{ fontSize: '0.75rem' }}>{t.completion_percentage}%</span>
-                            </div>
-                          </td>
-                          <td style={{ padding: '0.75rem 0.5rem' }}>{new Date(t.due_date).toLocaleDateString()}</td>
-                          <td style={{ padding: '0.75rem 0.5rem', display: 'flex', gap: '0.5rem' }}>
-                            <button className="btn btn-ghost btn-small" onClick={() => handleOpenTaskEdit(t)}>
-                              {t.status === 'Review' ? 'Review Submission' : 'Edit details'}
-                            </button>
-                            <button 
-                              className="btn btn-ghost btn-small" 
-                              onClick={() => handleDeleteTask(t.id, t.title)}
-                              style={{ color: 'var(--danger-color)' }}
-                            >
-                              Delete
-                            </button>
-                          </td>
-                        </tr>
+                {/* Status aggregates */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem' }}>
+                  <div className="stat-card" style={{ borderLeft: '4px solid var(--primary-color)' }}>
+                    <h4>{displayStats.total}</h4>
+                    <p>Total Tasks</p>
+                  </div>
+                  <div className="stat-card" style={{ borderLeft: '4px solid #6b7280' }}>
+                    <h4>{displayStats.pending}</h4>
+                    <p>Pending</p>
+                  </div>
+                  <div className="stat-card" style={{ borderLeft: '4px solid #8b5cf6' }}>
+                    <h4>{displayStats.inProgress}</h4>
+                    <p>In Progress</p>
+                  </div>
+                  <div className="stat-card" style={{ borderLeft: '4px solid #f59e0b' }}>
+                    <h4>{displayStats.review}</h4>
+                    <p>Pending Review</p>
+                  </div>
+                  <div className="stat-card" style={{ borderLeft: '4px solid #10b981' }}>
+                    <h4>{displayStats.completed}</h4>
+                    <p>Completed</p>
+                  </div>
+                  <div className="stat-card" style={{ borderLeft: '4px solid #ef4444' }}>
+                    <h4>{displayStats.overdue}</h4>
+                    <p>Overdue</p>
+                  </div>
+                </div>
+
+                {/* Filters container */}
+                <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                  {/* Categories filter dropdown above the task tracking table */}
+                  <div className="categories-filter-bar" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--bg-secondary)', padding: '0.5rem 0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', maxWidth: 'fit-content' }}>
+                    <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Categories:</span>
+                    <select 
+                      className="form-control" 
+                      style={{ width: '180px', padding: '0.35rem 0.75rem', fontSize: '0.85rem', height: 'auto' }}
+                      value={activeFilters.category_id}
+                      onChange={(e) => setActiveFilters(prev => ({ ...prev, category_id: e.target.value }))}
+                    >
+                      <option value="">All Categories</option>
+                      {categories.map(cat => (
+                        <option key={cat.id} value={cat.id}>{cat.category_name}</option>
                       ))}
-                    </tbody>
-                  </table>
+                    </select>
+                    <button 
+                      className="btn-icon-small" 
+                      onClick={() => setCategoryModalOpen(true)}
+                      title="Manage Categories"
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    >
+                      <Settings size={14} />
+                    </button>
+                  </div>
+
+                  {/* Users filter dropdown */}
+                  <div className="users-filter-bar" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--bg-secondary)', padding: '0.5rem 0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', maxWidth: 'fit-content' }}>
+                    <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Filter by User:</span>
+                    <select 
+                      className="form-control" 
+                      style={{ width: '180px', padding: '0.35rem 0.75rem', fontSize: '0.85rem', height: 'auto' }}
+                      value={selectedUserFilter}
+                      onChange={(e) => setSelectedUserFilter(e.target.value)}
+                    >
+                      <option value="">All Users</option>
+                      {users.map(u => (
+                        <option key={u.id} value={u.id}>{u.name || u.username} ({u.role})</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Tasks overview tabular layout */}
+                <div style={{ background: 'var(--bg-secondary)', borderRadius: '12px', padding: '1.5rem', border: '1px solid var(--border-color)' }}>
+                  <h3 style={{ marginBottom: '1rem' }}>General Task Assignment Tracking</h3>
+                  <div style={{ overflowX: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
+                      <thead>
+                        <tr style={{ textAlign: 'left', borderBottom: '2px solid var(--border-color)', paddingBottom: '0.5rem', color: 'var(--text-muted)' }}>
+                          <th style={{ padding: '0.5rem' }}>Task Title</th>
+                          <th style={{ padding: '0.5rem' }}>Assignee</th>
+                          <th style={{ padding: '0.5rem' }}>Priority</th>
+                          <th style={{ padding: '0.5rem' }}>Status</th>
+                          <th style={{ padding: '0.5rem' }}>Progress</th>
+                          <th style={{ padding: '0.5rem' }}>Due Date</th>
+                          <th style={{ padding: '0.5rem' }}>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredTasksForAdmin.map(t => (
+                          <tr key={t.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                            <td style={{ padding: '0.75rem 0.5rem' }}>
+                              <strong>{t.title}</strong>
+                              {t.category_name && <span className="badge badge-category" style={{ marginLeft: '4px', fontSize: '0.65rem' }}>{t.category_name}</span>}
+                            </td>
+                            <td style={{ padding: '0.75rem 0.5rem' }}>{t.assignee_name || 'Unassigned'}</td>
+                            <td style={{ padding: '0.75rem 0.5rem' }}>
+                              <span className={`badge badge-priority-${t.priority.toLowerCase()}`}>{t.priority}</span>
+                            </td>
+                            <td style={{ padding: '0.75rem 0.5rem' }}>
+                              <span className="badge" style={{ backgroundColor: t.status === 'Review' ? '#f59e0b' : (t.status === 'Completed' ? '#10b981' : '#3b82f6'), color: '#fff' }}>
+                                {t.status}
+                              </span>
+                            </td>
+                            <td style={{ padding: '0.75rem 0.5rem', width: '120px' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                <div style={{ flex: 1, height: '4px', background: 'var(--border-color)', borderRadius: '2px', overflow: 'hidden' }}>
+                                  <div style={{ width: `${t.completion_percentage}%`, height: '100%', background: 'var(--primary-color)' }} />
+                                </div>
+                                <span style={{ fontSize: '0.75rem' }}>{t.completion_percentage}%</span>
+                              </div>
+                            </td>
+                            <td style={{ padding: '0.75rem 0.5rem' }}>
+                              {(() => {
+                                const d = new Date(t.due_date);
+                                const pad = (n) => String(n).padStart(2, '0');
+                                return `${d.toLocaleDateString()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+                              })()}
+                            </td>
+                            <td style={{ padding: '0.75rem 0.5rem', display: 'flex', gap: '0.5rem' }}>
+                              <button className="btn btn-ghost btn-small" onClick={() => handleOpenTaskEdit(t)}>
+                                {t.status === 'Review' ? 'Review Submission' : 'Edit details'}
+                              </button>
+                              <button 
+                                className="btn btn-ghost btn-small" 
+                                onClick={() => handleDeleteTask(t.id, t.title)}
+                                style={{ color: 'var(--danger-color)' }}
+                              >
+                                Delete
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* 3. USER PERFORMANCE REPORTS */}
           {activeWorkspace === 'admin_reports' && (

@@ -304,19 +304,26 @@ const TaskCard = ({ task, onEdit, dragHandlers, isDraggable }) => {
     }
 
     const diffMin = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMin / 60);
-    const diffDays = Math.floor(diffHours / 24);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
 
-    if (diffDays > 0) {
+    if (diffMs > 24 * 3600000) {
       return (
         <span>
-          <Clock size={12} /> {diffDays}d remaining
+          <Clock size={12} style={{ marginRight: '2px', verticalAlign: 'middle' }} /> {diffDays} {diffDays === 1 ? 'day' : 'days'} remaining
+        </span>
+      );
+    }
+    if (diffMs >= 60 * 60000) {
+      return (
+        <span className="warning-text">
+          <Clock size={12} style={{ marginRight: '2px', verticalAlign: 'middle' }} /> {diffHours} {diffHours === 1 ? 'hour' : 'hours'} remaining
         </span>
       );
     }
     return (
       <span className="warning-text">
-        <Clock size={12} /> {diffMin} mins left!
+        <Clock size={12} style={{ marginRight: '2px', verticalAlign: 'middle' }} /> {diffMin} {diffMin === 1 ? 'min' : 'mins'} left!
       </span>
     );
   };
@@ -336,8 +343,13 @@ const TaskCard = ({ task, onEdit, dragHandlers, isDraggable }) => {
   };
 
   const formatDateTime = (date) => {
-    const options = { month: 'short', day: 'numeric' };
-    return date.toLocaleDateString(undefined, options);
+    const pad = (num) => String(num).padStart(2, '0');
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const month = months[date.getMonth()];
+    const day = date.getDate();
+    const hours = pad(date.getHours());
+    const minutes = pad(date.getMinutes());
+    return `${month} ${day}, ${hours}:${minutes}`;
   };
 
   return (

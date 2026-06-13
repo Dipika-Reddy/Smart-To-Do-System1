@@ -444,16 +444,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const diffMin = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMin / 60);
-    const diffDays = Math.floor(diffHours / 24);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
 
-    if (diffDays > 0) {
-      return `<span><i class="fa-regular fa-clock"></i> ${diffDays}d ${diffHours % 24}h remaining</span>`;
+    if (diffMs > 24 * 3600000) {
+      return `<span><i class="fa-regular fa-clock"></i> ${diffDays} ${diffDays === 1 ? 'day' : 'days'} remaining</span>`;
     }
-    if (diffHours > 0) {
-      return `<span><i class="fa-regular fa-clock"></i> ${diffHours}h ${diffMin % 60}m remaining</span>`;
+    if (diffMs >= 60 * 60000) {
+      return `<span class="warning-text"><i class="fa-regular fa-clock"></i> ${diffHours} ${diffHours === 1 ? 'hour' : 'hours'} remaining</span>`;
     }
-    return `<span class="warning-text"><i class="fa-regular fa-clock"></i> ${diffMin} mins left!</span>`;
+    return `<span class="warning-text"><i class="fa-regular fa-clock"></i> ${diffMin} ${diffMin === 1 ? 'min' : 'mins'} left!</span>`;
   }
 
   function formatDateTime(date) {

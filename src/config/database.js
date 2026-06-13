@@ -1,8 +1,10 @@
 const { Pool } = require('pg');
 require('dotenv').config();
+const path = require('path');
 
 let dbType = 'postgresql';
 let pgPool = null;
+let sqliteDb = null;
 let initError = null;
 
 // Unified query function to be exported
@@ -10,6 +12,24 @@ let query = async (sql, params = []) => {
   if (initError) {
     throw new Error('Database initialization failed: ' + initError.message);
   }
+
+  if (dbType === 'sqlite') {
+    return new Promise((resolve, reject) => {
+      const isSelect = /^\s*(SELECT|PRAGMA|SHOW|EXPLAIN)/i.test(sql);
+      if (isSelect) {
+        sqliteDb.all(sql, params, (err, rows) => {
+          if (err) return reject(err);
+          resolve([rows, null]);
+        });
+      } else {
+        sqliteDb.run(sql, params, function(err) {
+          if (err) return reject(err);
+          resolve([{ insertId: this.lastID, affectedRows: this.changes }, null]);
+        });
+      }
+    });
+  }
+
   if (!pgPool) {
     throw new Error('Database not initialized');
   }
@@ -45,10 +65,150 @@ async function initDatabase() {
   const connectionString = process.env.SUPABASE_DB_URL || process.env.DATABASE_URL || process.env.POSTGRES_URL;
 
   if (!connectionString) {
-    const err = new Error('Database connection URL is missing. Please set SUPABASE_DB_URL or DATABASE_URL in your environment variables.');
-    initError = err;
-    console.error('Fatal: ' + err.message);
-    throw err;
+    console.warn('Database connection URL is missing. Activating zero-configuration SQLite database fallback...');
+    if (process.env.VERCEL) {
+      const err = new Error('SQLite database fallback is not supported in the Vercel Serverless environment. Please define SUPABASE_DB_URL.');
+      initError = err;
+      throw err;
+    }
+
+    const sqlite3 = require('sqlite3').verbose();
+    const dbPath = path.resolve(__dirname, '../../todo.db');
+    
+    sqliteDb = new sqlite3.Database(dbPath, (err) => {
+      if (err) {
+        console.error('Could not connect to SQLite database', err);
+      } else {
+        console.log('Connected to SQLite database at:', dbPath);
+      }
+    });
+
+    sqliteDb.run('PRAGMA foreign_keys = ON');
+
+    await new Promise((resolve, reject) => {
+      sqliteDb.serialize(() => {
+        // Users table
+        sqliteDb.run(`CREATE TABLE IF NOT EXISTS users (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          username TEXT NOT NULL,
+          email TEXT UNIQUE NOT NULL,
+          password TEXT NOT NULL,
+          name TEXT DEFAULT NULL,
+          role TEXT CHECK(role IN ('Admin', 'User')) DEFAULT 'User',
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )`, (err) => { if (err) reject(err); });
+
+        // Categories table
+        sqliteDb.run(`CREATE TABLE IF NOT EXISTS categories (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          category_name TEXT UNIQUE NOT NULL,
+          user_id INTEGER DEFAULT NULL,
+          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )`, (err) => { if (err) reject(err); });
+
+        // Tasks table
+        sqliteDb.run(`CREATE TABLE IF NOT EXISTS tasks (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          user_id INTEGER NOT NULL,
+          title TEXT NOT NULL,
+          description TEXT,
+          category_id INTEGER DEFAULT NULL,
+          priority TEXT CHECK(priority IN ('High', 'Medium', 'Low')) DEFAULT 'Medium',
+          status TEXT CHECK(status IN ('Pending', 'In Progress', 'Review', 'Completed')) DEFAULT 'Pending',
+          due_date DATETIME NOT NULL,
+          assigned_by INTEGER DEFAULT NULL,
+          assigned_to INTEGER DEFAULT NULL,
+          completion_percentage INTEGER DEFAULT 0,
+          review_comments TEXT,
+          completion_notes TEXT,
+          approved_by INTEGER DEFAULT NULL,
+          approved_at DATETIME DEFAULT NULL,
+          last_updated_by INTEGER DEFAULT NULL,
+          position INTEGER DEFAULT 0,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+          FOREIGN KEY (category_id) REFERENCES categories (id) ON DELETE SET NULL,
+          FOREIGN KEY (assigned_by) REFERENCES users (id) ON DELETE SET NULL,
+          FOREIGN KEY (assigned_to) REFERENCES users (id) ON DELETE SET NULL,
+          FOREIGN KEY (approved_by) REFERENCES users (id) ON DELETE SET NULL,
+          FOREIGN KEY (last_updated_by) REFERENCES users (id) ON DELETE SET NULL
+        )`, (err) => { if (err) reject(err); });
+
+        // Checklist Items table
+        sqliteDb.run(`CREATE TABLE IF NOT EXISTS checklist_items (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          task_id INTEGER NOT NULL,
+          title TEXT NOT NULL,
+          is_completed INTEGER DEFAULT 0,
+          completed_at DATETIME DEFAULT NULL,
+          FOREIGN KEY (task_id) REFERENCES tasks (id) ON DELETE CASCADE
+        )`, (err) => { if (err) reject(err); });
+
+        // Task Updates table
+        sqliteDb.run(`CREATE TABLE IF NOT EXISTS task_updates (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          task_id INTEGER NOT NULL,
+          user_id INTEGER NOT NULL,
+          status TEXT,
+          comment TEXT,
+          progress_percentage INTEGER DEFAULT 0,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (task_id) REFERENCES tasks (id) ON DELETE CASCADE,
+          FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+        )`, (err) => { if (err) reject(err); });
+
+        // Notifications table
+        sqliteDb.run(`CREATE TABLE IF NOT EXISTS notifications (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          user_id INTEGER NOT NULL,
+          title TEXT NOT NULL,
+          message TEXT NOT NULL,
+          is_read INTEGER DEFAULT 0,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+        )`, (err) => { if (err) reject(err); });
+
+        // Activity Logs table
+        sqliteDb.run(`CREATE TABLE IF NOT EXISTS activity_logs (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          user_id INTEGER NOT NULL,
+          action TEXT NOT NULL,
+          entity_type TEXT NOT NULL,
+          entity_id INTEGER DEFAULT NULL,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+        )`, (err) => { if (err) reject(err); });
+
+        // Notes table
+        sqliteDb.run(`CREATE TABLE IF NOT EXISTS notes (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          user_id INTEGER NOT NULL,
+          title TEXT NOT NULL,
+          content TEXT NOT NULL,
+          type TEXT CHECK(type IN ('Note', 'List')) DEFAULT 'Note',
+          color_theme TEXT DEFAULT 'default',
+          pattern_theme TEXT DEFAULT 'blank',
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+        )`, (err) => { if (err) reject(err); });
+
+        // Seed categories
+        const categories = ['Personal', 'Academic', 'Work', 'Health', 'Others'];
+        const stmt = sqliteDb.prepare("INSERT OR IGNORE INTO categories (category_name) VALUES (?)");
+        for (const cat of categories) {
+          stmt.run(cat);
+        }
+        stmt.finalize((err) => {
+          if (err) reject(err);
+          else resolve();
+        });
+      });
+    });
+
+    dbType = 'sqlite';
+    return;
   }
 
   try {

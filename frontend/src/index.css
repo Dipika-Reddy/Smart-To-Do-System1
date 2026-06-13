@@ -919,9 +919,9 @@ a:hover {
 .task-card-title {
   font-size: 0.95rem;
   font-weight: 500;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 .task-card.completed .task-card-title {
   text-decoration: line-through;
