@@ -298,10 +298,21 @@ export const AppProvider = ({ children }) => {
     }
   };
 
-  const registerUser = async (username, email, password, name = '', role = 'User') => {
+  const registerUser = async (username, email, password, name = '', role = 'User', employeeId = null) => {
     try {
-      const data = await API.register(username, email, password, name, role);
+      const data = await API.register(username, email, password, name, role, employeeId);
       showToast('Registration successful! You may log in now.', 'success');
+      return data;
+    } catch (error) {
+      showToast(error.message, 'danger');
+      throw error;
+    }
+  };
+
+  const resetPassword = async (username, newPassword, role) => {
+    try {
+      const data = await API.resetPassword(username, newPassword, role);
+      showToast('Password reset successfully! You can now log in.', 'success');
       return data;
     } catch (error) {
       showToast(error.message, 'danger');
@@ -401,6 +412,7 @@ export const AppProvider = ({ children }) => {
       setTheme,
       loginUser,
       registerUser,
+      resetPassword,
       logoutUser,
       setActiveWorkspace,
       setActiveFilters,

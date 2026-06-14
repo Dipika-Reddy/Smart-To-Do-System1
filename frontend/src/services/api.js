@@ -30,10 +30,11 @@ const API = {
   },
 
   // ================= AUTHENTICATION =================
-  async register(username, email, password, name = '', role = 'User') {
+  async register(username, email, password, name = '', role = 'User', employee_id = null) {
+    const dbEmployeeId = role === 'Admin' ? null : (employee_id || username);
     return this.request('/api/auth/register', {
       method: 'POST',
-      body: JSON.stringify({ employee_id: username, username, email, password, name, role })
+      body: JSON.stringify({ employee_id: dbEmployeeId, username, email, password, name, role })
     });
   },
 
@@ -58,6 +59,13 @@ const API = {
     return this.request('/api/auth/change-password', {
       method: 'PUT',
       body: JSON.stringify({ currentPassword, newPassword })
+    });
+  },
+
+  async resetPassword(username, newPassword, role = 'User') {
+    return this.request('/api/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ username, newPassword, role })
     });
   },
 

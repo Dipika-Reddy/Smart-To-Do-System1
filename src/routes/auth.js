@@ -167,6 +167,53 @@ router.put('/change-password', authenticateToken, async (req, res) => {
   }
 });
 
+// POST /reset-password
+router.post('/reset-password', async (req, res) => {
+  const { username, newPassword, role } = req.body;
+  if (!username || !newPassword || !role) {
+    return res.status(400).json({ error: 'Username/Employee ID, role, and new password are required.' });
+  }
+
+  try {
+    const input = username.trim();
+    // Look up by employee_id for User OR username for Admin
+    const [users] = await db.query(
+      "SELECT * FROM users WHERE (employee_id = ? AND role = 'User') OR (username = ? AND role = 'Admin')",
+      [input, input]
+    );
+
+    if (users.length === 0) {
+      const errorMsg = role === 'User' ? 'User with this Employee ID does not exist.' : 'Admin with this username does not exist.';
+      return res.status(404).json({ error: errorMsg });
+    }
+
+    // Password rules check
+    if (newPassword.length < 8) {
+      return res.status(400).json({ error: 'New password must be at least 8 characters long.' });
+    }
+    const hasUppercase = /[A-Z]/.test(newPassword);
+    if (!hasUppercase) {
+      return res.status(400).json({ error: 'New password must contain at least one uppercase letter.' });
+    }
+    const hasNumber = /[0-9]/.test(newPassword);
+    if (!hasNumber) {
+      return res.status(400).json({ error: 'New password must contain at least one number.' });
+    }
+    const hasSpecial = /[!@#$%^&*(),.?":{}|<>_+\-\[\]\\\/]/.test(newPassword);
+    if (!hasSpecial) {
+      return res.status(400).json({ error: 'New password must contain at least one special character.' });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    const user = users[0];
+    await db.query('UPDATE users SET password = ? WHERE id = ?', [hashedPassword, user.id]);
+    res.json({ message: 'Password reset successfully.' });
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({ error: error.message || 'Internal server error resetting password.' });
+  }
+});
+
 // POST /crm-login — Auto login from CRM session
 router.post('/crm-login', async (req, res) => {
   const { empId, name, role } = req.body;

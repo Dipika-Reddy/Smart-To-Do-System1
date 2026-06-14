@@ -45,6 +45,7 @@ function App() {
     loadNotes,
     loginUser,
     registerUser,
+    resetPassword,
     dashboardStats,
     globalDashboardStats,
     userPerformance,
@@ -133,6 +134,12 @@ function App() {
   const [regPassword, setRegPassword] = useState('');
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [showRegPassword, setShowRegPassword] = useState(false);
+  const [regEmployeeId, setRegEmployeeId] = useState('');
+  const [resetUsername, setResetUsername] = useState('');
+  const [resetNewPassword, setResetNewPassword] = useState('');
+  const [resetConfirmPassword, setResetConfirmPassword] = useState('');
+  const [showResetNewPassword, setShowResetNewPassword] = useState(false);
+  const [showResetConfirmPassword, setShowResetConfirmPassword] = useState(false);
 
   // Drag and Drop Local States
   const [draggedTaskId, setDraggedTaskId] = useState(null);
@@ -244,6 +251,11 @@ function App() {
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
 
+    if (selectedAuthRole === 'User' && (!regEmployeeId || !regEmployeeId.trim())) {
+      showToast('Employee ID is required.', 'warning');
+      return;
+    }
+
     // Validations matching backend
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(regEmail)) {
@@ -268,19 +280,68 @@ function App() {
     }
 
     try {
-      const res = await registerUser(regUsername, regEmail, regPassword, regFullName, selectedAuthRole);
+      const res = await registerUser(
+        regUsername, 
+        regEmail, 
+        regPassword, 
+        regFullName, 
+        selectedAuthRole, 
+        selectedAuthRole === 'User' ? regEmployeeId : null
+      );
       // Switch back to login form
       setAuthForm('login');
-      setLoginUsername(regUsername);
+      setLoginUsername(selectedAuthRole === 'User' ? regEmployeeId : regUsername);
       if (selectedAuthRole === 'User') {
-        showToast(`Registration successful! Your Employee ID is ${regUsername}. Please use it to log in.`, 'success');
+        showToast(`Registration successful! Your Employee ID is ${regEmployeeId}. Please use it to log in.`, 'success');
+      } else {
+        showToast(`Registration successful! Please use username ${regUsername} to log in.`, 'success');
       }
       setRegUsername('');
+      setRegEmployeeId('');
       setRegFullName('');
       setRegEmail('');
       setRegPassword('');
     } catch (err) {
       // Already alerted
+    }
+  };
+
+  const handleResetPasswordSubmit = async (e) => {
+    e.preventDefault();
+
+    if (resetNewPassword !== resetConfirmPassword) {
+      showToast('Passwords do not match.', 'warning');
+      return;
+    }
+
+    // Password validation matching backend
+    if (resetNewPassword.length < 8) {
+      showToast('Password must be at least 8 characters.', 'warning');
+      return;
+    }
+    if (!/[A-Z]/.test(resetNewPassword)) {
+      showToast('Password must contain an uppercase letter.', 'warning');
+      return;
+    }
+    if (!/[0-9]/.test(resetNewPassword)) {
+      showToast('Password must contain a number.', 'warning');
+      return;
+    }
+    if (!/[!@#$%^&*(),.?":{}|<>_+\-\[\]\\\/]/.test(resetNewPassword)) {
+      showToast('Password must contain a special character.', 'warning');
+      return;
+    }
+
+    try {
+      await resetPassword(resetUsername, resetNewPassword, selectedAuthRole);
+      // Switch back to login form
+      setAuthForm('login');
+      setLoginUsername(resetUsername);
+      setResetUsername('');
+      setResetNewPassword('');
+      setResetConfirmPassword('');
+    } catch (err) {
+      // Already toasted
     }
   };
 
@@ -463,6 +524,9 @@ function App() {
                       </div>
                     </div>
                     <button type="submit" className="btn btn-primary btn-block">Log In</button>
+                    <div style={{ textAlign: 'center', marginTop: '0.75rem' }}>
+                      <a href="#" onClick={(e) => { e.preventDefault(); setAuthForm('forgot'); }} style={{ fontSize: '0.85rem', color: 'var(--primary-color)', fontWeight: '500' }}>Forgot password?</a>
+                    </div>
                   </form>
                   <p className="switch-auth">Don't have an account? <a href="#" onClick={(e) => { e.preventDefault(); setAuthForm('register'); }}>Sign up</a></p>
 
@@ -479,11 +543,24 @@ function App() {
                     </p>
                   )}
                 </div>
-              ) : (
+              ) : authForm === 'register' ? (
                 <div className="auth-form-wrapper" id="register-form-wrapper">
                   <h2>Create {selectedAuthRole} Account</h2>
                   <p className="subtitle">Join SmartTodo system</p>
                   <form id="register-form" onSubmit={handleRegisterSubmit}>
+                    {selectedAuthRole === 'User' && (
+                      <div className="form-group">
+                        <label htmlFor="reg-employee-id">Employee ID</label>
+                        <input 
+                          type="text" 
+                          id="reg-employee-id" 
+                          required 
+                          placeholder="HPS260038"
+                          value={regEmployeeId}
+                          onChange={(e) => setRegEmployeeId(e.target.value)}
+                        />
+                      </div>
+                    )}
                     <div className="form-group">
                       <label htmlFor="reg-username">Username</label>
                       <input 
@@ -549,6 +626,70 @@ function App() {
                       Not an admin? <a href="#" onClick={(e) => { e.preventDefault(); window.location.hash = ''; setSelectedAuthRole('User'); }}>User Sign In</a>
                     </p>
                   )}
+                </div>
+              ) : (
+                <div className="auth-form-wrapper" id="forgot-form-wrapper">
+                  <h2>Reset Password</h2>
+                  <p className="subtitle">Enter details to reset your password</p>
+                  <form id="forgot-form" onSubmit={handleResetPasswordSubmit}>
+                    <div className="form-group">
+                      <label htmlFor="reset-username">
+                        {selectedAuthRole === 'Admin' ? 'Username' : 'Employee ID'}
+                      </label>
+                      <input 
+                        type="text" 
+                        id="reset-username" 
+                        required 
+                        placeholder={selectedAuthRole === 'Admin' ? 'Enter your username' : 'Enter your Employee ID'}
+                        value={resetUsername}
+                        onChange={(e) => setResetUsername(e.target.value)}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="reset-new-password">New Password</label>
+                      <div className="password-input-container">
+                        <input 
+                          type={showResetNewPassword ? "text" : "password"} 
+                          id="reset-new-password" 
+                          required 
+                          placeholder="••••••••"
+                          value={resetNewPassword}
+                          onChange={(e) => setResetNewPassword(e.target.value)}
+                        />
+                        <button 
+                          type="button" 
+                          className="password-toggle-btn"
+                          onClick={() => setShowResetNewPassword(!showResetNewPassword)}
+                          aria-label={showResetNewPassword ? "Hide password" : "Show password"}
+                        >
+                          {showResetNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                        </button>
+                      </div>
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="reset-confirm-password">Confirm Password</label>
+                      <div className="password-input-container">
+                        <input 
+                          type={showResetConfirmPassword ? "text" : "password"} 
+                          id="reset-confirm-password" 
+                          required 
+                          placeholder="••••••••"
+                          value={resetConfirmPassword}
+                          onChange={(e) => setResetConfirmPassword(e.target.value)}
+                        />
+                        <button 
+                          type="button" 
+                          className="password-toggle-btn"
+                          onClick={() => setShowResetConfirmPassword(!showResetConfirmPassword)}
+                          aria-label={showResetConfirmPassword ? "Hide password" : "Show password"}
+                        >
+                          {showResetConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                        </button>
+                      </div>
+                    </div>
+                    <button type="submit" className="btn btn-primary btn-block">Reset Password</button>
+                  </form>
+                  <p className="switch-auth">Remember your password? <a href="#" onClick={(e) => { e.preventDefault(); setAuthForm('login'); }}>Log in</a></p>
                 </div>
               )}
             </div>
