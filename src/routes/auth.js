@@ -44,7 +44,7 @@ router.post('/register', validateRegister, async (req, res) => {
 
 // POST /login
 router.post('/login', async (req, res) => {
-  const { username, password, role } = req.body;
+  const { username, password } = req.body;
 
   if (!username || !password) {
     return res.status(400).json({ error: 'Employee ID/Username and password are required.' });
@@ -52,18 +52,15 @@ router.post('/login', async (req, res) => {
 
   try {
     const input = username.trim();
-    // Default the role guess to 'User' if the input format looks like numeric or if explicitly provided
-    const loginRole = role || ( /^\d+$/.test(input) ? 'User' : 'Admin' );
 
-    // Look up by employee_id for User OR username for Admin
+    // Look up by employee_id or username
     const [users] = await db.query(
-      "SELECT * FROM users WHERE (employee_id = ? AND role = 'User') OR (username = ? AND role = 'Admin')",
+      "SELECT * FROM users WHERE employee_id = ? OR username = ?",
       [input, input]
     );
 
     if (users.length === 0) {
-      const errorMsg = loginRole === 'User' ? 'Invalid Employee ID or password.' : 'Invalid username or password.';
-      return res.status(400).json({ error: errorMsg });
+      return res.status(400).json({ error: 'Invalid Employee ID/Username or password.' });
     }
 
     const user = users[0];
@@ -71,8 +68,7 @@ router.post('/login', async (req, res) => {
     // Check password
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      const errorMsg = user.role === 'User' ? 'Invalid Employee ID or password.' : 'Invalid username or password.';
-      return res.status(400).json({ error: errorMsg });
+      return res.status(400).json({ error: 'Invalid Employee ID/Username or password.' });
     }
 
     // Generate JWT token including name and role
@@ -169,22 +165,21 @@ router.put('/change-password', authenticateToken, async (req, res) => {
 
 // POST /reset-password
 router.post('/reset-password', async (req, res) => {
-  const { username, newPassword, role } = req.body;
-  if (!username || !newPassword || !role) {
-    return res.status(400).json({ error: 'Username/Employee ID, role, and new password are required.' });
+  const { username, newPassword } = req.body;
+  if (!username || !newPassword) {
+    return res.status(400).json({ error: 'Username/Employee ID and new password are required.' });
   }
 
   try {
     const input = username.trim();
-    // Look up by employee_id for User OR username for Admin
+    // Look up by employee_id or username
     const [users] = await db.query(
-      "SELECT * FROM users WHERE (employee_id = ? AND role = 'User') OR (username = ? AND role = 'Admin')",
+      "SELECT * FROM users WHERE employee_id = ? OR username = ?",
       [input, input]
     );
 
     if (users.length === 0) {
-      const errorMsg = role === 'User' ? 'User with this Employee ID does not exist.' : 'Admin with this username does not exist.';
-      return res.status(404).json({ error: errorMsg });
+      return res.status(404).json({ error: 'User/Admin with this Employee ID/Username does not exist.' });
     }
 
     // Password rules check

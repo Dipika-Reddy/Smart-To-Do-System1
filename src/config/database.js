@@ -206,7 +206,7 @@ async function initDatabase() {
           bcrypt.hash('Admin@123', 10, (hashErr, hashedPassword) => {
             if (hashErr) return reject(hashErr);
             sqliteDb.run(
-              "UPDATE users SET username = 'admin', password = ? WHERE role = 'Admin' OR username = 'VerifyAdmin'",
+              "UPDATE users SET username = 'admin', employee_id = 'admin', password = ? WHERE role = 'Admin' OR username = 'VerifyAdmin'",
               [hashedPassword],
               (updateErr) => {
                 if (updateErr) return reject(updateErr);
@@ -339,7 +339,7 @@ async function initDatabase() {
       const bcrypt = require('bcryptjs');
       const hashedPassword = await bcrypt.hash('Admin@123', 10);
       const res = await pgPool.query(
-        "UPDATE users SET username = 'admin', password = $1 WHERE role = 'Admin' OR username = 'VerifyAdmin'",
+        "UPDATE users SET username = 'admin', employee_id = 'admin', password = $1 WHERE role = 'Admin' OR username = 'VerifyAdmin'",
         [hashedPassword]
       );
       console.log(`Updated admin user to username 'admin' and password 'Admin@123' in PostgreSQL/Supabase: ${res.rowCount} row(s) updated.`);

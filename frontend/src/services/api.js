@@ -38,10 +38,10 @@ const API = {
     });
   },
 
-  async login(username, password, role = 'User') {
+  async login(username, password) {
     return this.request('/api/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ username, password, role })
+      body: JSON.stringify({ username, password })
     });
   },
 
@@ -62,10 +62,10 @@ const API = {
     });
   },
 
-  async resetPassword(username, newPassword, role = 'User') {
+  async resetPassword(username, newPassword) {
     return this.request('/api/auth/reset-password', {
       method: 'POST',
-      body: JSON.stringify({ username, newPassword, role })
+      body: JSON.stringify({ username, newPassword })
     });
   },
 

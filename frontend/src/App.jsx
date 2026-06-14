@@ -82,47 +82,14 @@ function App() {
   const authCardRef = useRef(null);
 
   // Auth screen state
-  const [authRoleSelection, setAuthRoleSelection] = useState(false); // No landing selection screen by default
-  const [selectedAuthRole, setSelectedAuthRole] = useState(
-    window.location.hash === '#admin' || 
-    window.location.search.includes('admin=true') ||
-    window.location.pathname === '/admin' ||
-    window.location.pathname.startsWith('/admin/')
-      ? 'Admin'
-      : 'User'
-  );
   const [authForm, setAuthForm] = useState('login'); // login | register
 
   useEffect(() => {
-    const handleHashAndPathChange = () => {
-      const isPathAdmin = window.location.hash === '#admin' || 
-                          window.location.pathname === '/admin' || 
-                          window.location.pathname.startsWith('/admin/');
-      if (isPathAdmin) {
-        setSelectedAuthRole('Admin');
-      } else if (window.location.hash === '#user' || !window.location.hash) {
-        if (window.location.pathname !== '/admin' && !window.location.pathname.startsWith('/admin/')) {
-          setSelectedAuthRole('User');
-        }
-      }
-    };
-    
-    handleHashAndPathChange();
-    window.addEventListener('hashchange', handleHashAndPathChange);
-    window.addEventListener('popstate', handleHashAndPathChange);
-    return () => {
-      window.removeEventListener('hashchange', handleHashAndPathChange);
-      window.removeEventListener('popstate', handleHashAndPathChange);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (currentUser && currentUser.role === 'Admin') {
-      const isPathAdmin = window.location.pathname === '/admin' || 
-                          window.location.pathname.startsWith('/admin/') || 
-                          window.location.hash === '#admin';
-      if (isPathAdmin) {
+    if (currentUser) {
+      if (currentUser.role === 'Admin') {
         setActiveWorkspace('admin_dashboard');
+      } else {
+        setActiveWorkspace('tasks');
       }
     }
   }, [currentUser, setActiveWorkspace]);
@@ -227,22 +194,9 @@ function App() {
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
     try {
-      const user = await loginUser(loginUsername, loginPassword, selectedAuthRole);
-      // Validate role choice match (Warn if logging into mismatched roles, but log them in anyway)
-      if (user.role !== selectedAuthRole) {
-        showToast(`Logged in as ${user.role} (Selection was: ${selectedAuthRole})`, 'info');
-      }
+      await loginUser(loginUsername, loginPassword);
       setLoginUsername('');
       setLoginPassword('');
-      // Route workspaces on login
-      if (user.role === 'Admin') {
-        const isPathAdmin = window.location.pathname === '/admin' || 
-                            window.location.pathname.startsWith('/admin/') || 
-                            window.location.hash === '#admin';
-        setActiveWorkspace(isPathAdmin ? 'admin_dashboard' : 'tasks');
-      } else {
-        setActiveWorkspace('tasks');
-      }
     } catch (err) {
       // already toast alert in context
     }
@@ -251,7 +205,7 @@ function App() {
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
 
-    if (selectedAuthRole === 'User' && (!regEmployeeId || !regEmployeeId.trim())) {
+    if (!regEmployeeId || !regEmployeeId.trim()) {
       showToast('Employee ID is required.', 'warning');
       return;
     }
@@ -280,22 +234,18 @@ function App() {
     }
 
     try {
-      const res = await registerUser(
+      await registerUser(
         regUsername, 
         regEmail, 
         regPassword, 
         regFullName, 
-        selectedAuthRole, 
-        selectedAuthRole === 'User' ? regEmployeeId : null
+        'User', 
+        regEmployeeId
       );
       // Switch back to login form
       setAuthForm('login');
-      setLoginUsername(selectedAuthRole === 'User' ? regEmployeeId : regUsername);
-      if (selectedAuthRole === 'User') {
-        showToast(`Registration successful! Your Employee ID is ${regEmployeeId}. Please use it to log in.`, 'success');
-      } else {
-        showToast(`Registration successful! Please use username ${regUsername} to log in.`, 'success');
-      }
+      setLoginUsername(regEmployeeId);
+      showToast(`Registration successful! Your Employee ID is ${regEmployeeId}. Please use it to log in.`, 'success');
       setRegUsername('');
       setRegEmployeeId('');
       setRegFullName('');
@@ -333,7 +283,7 @@ function App() {
     }
 
     try {
-      await resetPassword(resetUsername, resetNewPassword, selectedAuthRole);
+      await resetPassword(resetUsername, resetNewPassword);
       // Switch back to login form
       setAuthForm('login');
       setLoginUsername(resetUsername);
@@ -469,34 +419,24 @@ function App() {
             <img src="/logo.png" alt="SmartTodo Logo" style={{ width: '28px', height: '28px', objectFit: 'contain' }} />
             <span>SmartTodo</span>
           </div>
-          <div className="landing-nav-btns">
-            {selectedAuthRole === 'Admin' && (
-              <a href="#" className="btn btn-ghost" onClick={() => { setSelectedAuthRole('User'); window.location.hash = ''; }}>User Workspace</a>
-            )}
-          </div>
         </header>
 
         <main className="landing-main">
           <div className="auth-form-outer">
-            <div style={{ marginBottom: '1rem', display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
-              <span className="badge badge-priority-high" style={{ textTransform: 'uppercase' }}>Authenticating as: {selectedAuthRole}</span>
-            </div>
 
             <div className="auth-card" ref={authCardRef} id="auth-card" style={{ width: '100%' }}>
               {authForm === 'login' ? (
                 <div className="auth-form-wrapper" id="login-form-wrapper">
-                  <h2>{selectedAuthRole} Sign In</h2>
+                  <h2>Sign In</h2>
                   <p className="subtitle">Enter credentials to load dashboard</p>
                   <form id="login-form" onSubmit={handleLoginSubmit}>
                     <div className="form-group">
-                      <label htmlFor="login-username">
-                        {selectedAuthRole === 'Admin' ? 'Username' : 'Employee ID'}
-                      </label>
+                      <label htmlFor="login-username">Employee ID</label>
                       <input 
                         type="text" 
                         id="login-username" 
                         required 
-                        placeholder={selectedAuthRole === 'Admin' ? 'Enter your username' : 'Enter your Employee ID'}
+                        placeholder="Enter your Employee ID"
                         value={loginUsername}
                         onChange={(e) => setLoginUsername(e.target.value)}
                       />
@@ -530,37 +470,24 @@ function App() {
                   </form>
                   <p className="switch-auth">Don't have an account? <a href="#" onClick={(e) => { e.preventDefault(); setAuthForm('register'); }}>Sign up</a></p>
 
-                  {selectedAuthRole === 'Admin' && (
-                    <p className="switch-auth" style={{ marginTop: '1rem', borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
-                      Not an admin? <a href="#" onClick={(e) => { 
-                        e.preventDefault(); 
-                        window.location.hash = ''; 
-                        if (window.location.pathname === '/admin' || window.location.pathname.startsWith('/admin/')) {
-                          window.history.pushState({}, '', '/');
-                        }
-                        setSelectedAuthRole('User'); 
-                      }}>User Sign In</a>
-                    </p>
-                  )}
+                  {/* Unified login screen for both users and admin */}
                 </div>
               ) : authForm === 'register' ? (
                 <div className="auth-form-wrapper" id="register-form-wrapper">
-                  <h2>Create {selectedAuthRole} Account</h2>
+                  <h2>Create Account</h2>
                   <p className="subtitle">Join SmartTodo system</p>
                   <form id="register-form" onSubmit={handleRegisterSubmit}>
-                    {selectedAuthRole === 'User' && (
-                      <div className="form-group">
-                        <label htmlFor="reg-employee-id">Employee ID</label>
-                        <input 
-                          type="text" 
-                          id="reg-employee-id" 
-                          required 
-                          placeholder="HPS260038"
-                          value={regEmployeeId}
-                          onChange={(e) => setRegEmployeeId(e.target.value)}
-                        />
-                      </div>
-                    )}
+                    <div className="form-group">
+                      <label htmlFor="reg-employee-id">Employee ID</label>
+                      <input 
+                        type="text" 
+                        id="reg-employee-id" 
+                        required 
+                        placeholder="HPS260038"
+                        value={regEmployeeId}
+                        onChange={(e) => setRegEmployeeId(e.target.value)}
+                      />
+                    </div>
                     <div className="form-group">
                       <label htmlFor="reg-username">Username</label>
                       <input 
@@ -621,11 +548,6 @@ function App() {
                   </form>
                   <p className="switch-auth">Already have an account? <a href="#" onClick={(e) => { e.preventDefault(); setAuthForm('login'); }}>Log in</a></p>
 
-                  {selectedAuthRole === 'Admin' && (
-                    <p className="switch-auth" style={{ marginTop: '1rem', borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
-                      Not an admin? <a href="#" onClick={(e) => { e.preventDefault(); window.location.hash = ''; setSelectedAuthRole('User'); }}>User Sign In</a>
-                    </p>
-                  )}
                 </div>
               ) : (
                 <div className="auth-form-wrapper" id="forgot-form-wrapper">
@@ -633,14 +555,12 @@ function App() {
                   <p className="subtitle">Enter details to reset your password</p>
                   <form id="forgot-form" onSubmit={handleResetPasswordSubmit}>
                     <div className="form-group">
-                      <label htmlFor="reset-username">
-                        {selectedAuthRole === 'Admin' ? 'Username' : 'Employee ID'}
-                      </label>
+                      <label htmlFor="reset-username">Employee ID</label>
                       <input 
                         type="text" 
                         id="reset-username" 
                         required 
-                        placeholder={selectedAuthRole === 'Admin' ? 'Enter your username' : 'Enter your Employee ID'}
+                        placeholder="Enter your Employee ID"
                         value={resetUsername}
                         onChange={(e) => setResetUsername(e.target.value)}
                       />

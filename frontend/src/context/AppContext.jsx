@@ -286,9 +286,9 @@ export const AppProvider = ({ children }) => {
     checkSession();
   }, []);
 
-  const loginUser = async (username, password, role) => {
+  const loginUser = async (username, password) => {
     try {
-      const data = await API.login(username, password, role);
+      const data = await API.login(username, password);
       setCurrentUser(data.user);
       showToast('Logged in successfully.', 'success');
       return data.user;
@@ -309,9 +309,9 @@ export const AppProvider = ({ children }) => {
     }
   };
 
-  const resetPassword = async (username, newPassword, role) => {
+  const resetPassword = async (username, newPassword) => {
     try {
-      const data = await API.resetPassword(username, newPassword, role);
+      const data = await API.resetPassword(username, newPassword);
       showToast('Password reset successfully! You can now log in.', 'success');
       return data;
     } catch (error) {
