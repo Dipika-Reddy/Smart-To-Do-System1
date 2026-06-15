@@ -62,10 +62,10 @@ const API = {
     });
   },
 
-  async resetPassword(username, newPassword) {
+  async resetPassword(username, email, newPassword) {
     return this.request('/api/auth/reset-password', {
       method: 'POST',
-      body: JSON.stringify({ username, newPassword })
+      body: JSON.stringify({ username, email, newPassword })
     });
   },
 

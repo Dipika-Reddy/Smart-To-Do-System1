@@ -31,3 +31,9 @@ dist-ssr
 .env.development.local
 .env.test.local
 .env.production.local
+
+# Database & Backups
+todo.db
+todo.db-wal
+todo.db-shm
+backups/

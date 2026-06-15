@@ -309,9 +309,9 @@ export const AppProvider = ({ children }) => {
     }
   };
 
-  const resetPassword = async (username, newPassword) => {
+  const resetPassword = async (username, email, newPassword) => {
     try {
-      const data = await API.resetPassword(username, newPassword);
+      const data = await API.resetPassword(username, email, newPassword);
       showToast('Password reset successfully! You can now log in.', 'success');
       return data;
     } catch (error) {

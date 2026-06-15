@@ -103,6 +103,7 @@ function App() {
   const [showRegPassword, setShowRegPassword] = useState(false);
   const [regEmployeeId, setRegEmployeeId] = useState('');
   const [resetUsername, setResetUsername] = useState('');
+  const [resetEmail, setResetEmail] = useState('');
   const [resetNewPassword, setResetNewPassword] = useState('');
   const [resetConfirmPassword, setResetConfirmPassword] = useState('');
   const [showResetNewPassword, setShowResetNewPassword] = useState(false);
@@ -286,11 +287,12 @@ function App() {
     }
 
     try {
-      await resetPassword(resetUsername, resetNewPassword);
+      await resetPassword(resetUsername, resetEmail, resetNewPassword);
       // Switch back to login form
       setAuthForm('login');
       setLoginUsername(resetUsername);
       setResetUsername('');
+      setResetEmail('');
       setResetNewPassword('');
       setResetConfirmPassword('');
     } catch (err) {
@@ -569,6 +571,17 @@ function App() {
                       />
                     </div>
                     <div className="form-group">
+                      <label htmlFor="reset-email">Registered Email</label>
+                      <input 
+                        type="email" 
+                        id="reset-email" 
+                        required 
+                        placeholder="username@example.com"
+                        value={resetEmail}
+                        onChange={(e) => setResetEmail(e.target.value)}
+                      />
+                    </div>
+                    <div className="form-group">
                       <label htmlFor="reset-new-password">New Password</label>
                       <div className="password-input-container">
                         <input 
@@ -673,11 +686,11 @@ function App() {
               
               <StatsDashboard />
 
-              <section className="tasks-control-bar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', width: '100%' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '0.5rem', flex: 1, minWidth: '280px' }}>
-                  {/* Row 1: Sort label and Asc/Desc toggle arrow beside it */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Sort cards:</span>
+              <section className="tasks-control-bar">
+                {/* 1. Sorting Section */}
+                <div className="tasks-sorting-container">
+                  <div className="sort-label-toggle-group">
+                    <span className="sort-label">Sort cards:</span>
                     <button 
                       id="sort-order-toggle" 
                       className="btn-icon-small" 
@@ -689,15 +702,13 @@ function App() {
                     </button>
                   </div>
 
-                  {/* Row 2: Options buttons container on a single line, scrollable horizontally */}
-                  <div style={{ width: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch', paddingBottom: '4px' }}>
-                    <div className="sort-buttons" style={{ display: 'inline-flex', gap: '0.25rem', padding: '3px', background: 'var(--bg-tertiary)', borderRadius: '8px', minWidth: 'max-content' }}>
+                  <div className="sort-options-scroll-wrapper">
+                    <div className="sort-buttons">
                       {['position', 'due_date', 'priority', 'title', 'created_at'].map(criteria => (
                         <button 
                           key={criteria}
                           className={`btn btn-sort ${activeFilters.sortBy === criteria ? 'active' : ''}`}
                           onClick={() => handleSortChange(criteria)}
-                          style={{ whiteSpace: 'nowrap' }}
                         >
                           {criteria === 'position' ? 'Custom' : 
                            criteria === 'due_date' ? 'Due Date' : 
@@ -709,57 +720,56 @@ function App() {
                   </div>
                 </div>
 
-                {currentUser?.role === 'Admin' && (
-                  <button className="btn btn-primary" onClick={handleOpenTaskAdd} style={{ height: 'fit-content' }}>
-                    <Plus size={16} /> Create Task
-                  </button>
-                )}
-              </section>
-
-              {/* Filters container */}
-              <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                {/* Categories dropdown below sort cards */}
-                <div className="categories-filter-bar" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--bg-secondary)', padding: '0.5rem 0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', maxWidth: 'fit-content' }}>
-                  <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Categories:</span>
-                  <select 
-                    className="form-control" 
-                    style={{ width: '180px', padding: '0.35rem 0.75rem', fontSize: '0.85rem', height: 'auto' }}
-                    value={activeFilters.category_id}
-                    onChange={(e) => setActiveFilters(prev => ({ ...prev, category_id: e.target.value }))}
-                  >
-                    <option value="">All Categories</option>
-                    {categories.map(cat => (
-                      <option key={cat.id} value={cat.id}>{cat.category_name}</option>
-                    ))}
-                  </select>
-                  <button 
-                    className="btn-icon-small" 
-                    onClick={() => setCategoryModalOpen(true)}
-                    title="Manage Categories"
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                  >
-                    <Settings size={14} />
-                  </button>
-                </div>
-
-                {/* Users filter dropdown - only accessible by Admin */}
-                {currentUser?.role === 'Admin' && (
-                  <div className="users-filter-bar" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--bg-secondary)', padding: '0.5rem 0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', maxWidth: 'fit-content' }}>
-                    <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Filter by User:</span>
+                {/* 2. Filters & Actions Section */}
+                <div className="tasks-filters-actions-container">
+                  {/* Categories dropdown */}
+                  <div className="categories-filter-bar">
+                    <span className="filter-bar-label">Categories:</span>
                     <select 
-                      className="form-control" 
-                      style={{ width: '180px', padding: '0.35rem 0.75rem', fontSize: '0.85rem', height: 'auto' }}
-                      value={selectedUserFilter}
-                      onChange={(e) => setSelectedUserFilter(e.target.value)}
+                      className="form-control filter-select" 
+                      value={activeFilters.category_id}
+                      onChange={(e) => setActiveFilters(prev => ({ ...prev, category_id: e.target.value }))}
                     >
-                      <option value="">All Users</option>
-                      {users.map(u => (
-                        <option key={u.id} value={u.id}>{u.name || u.username} ({u.role})</option>
+                      <option value="">All Categories</option>
+                      {categories.map(cat => (
+                        <option key={cat.id} value={cat.id}>{cat.category_name}</option>
                       ))}
                     </select>
+                    <button 
+                      className="btn-icon-small manage-categories-btn" 
+                      onClick={() => setCategoryModalOpen(true)}
+                      title="Manage Categories"
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    >
+                      <Settings size={14} />
+                    </button>
                   </div>
-                )}
-              </div>
+
+                  {/* Users filter dropdown - Admin only */}
+                  {currentUser?.role === 'Admin' && (
+                    <div className="users-filter-bar">
+                      <span className="filter-bar-label">Filter by User:</span>
+                      <select 
+                        className="form-control filter-select" 
+                        value={selectedUserFilter}
+                        onChange={(e) => setSelectedUserFilter(e.target.value)}
+                      >
+                        <option value="">All Users</option>
+                        {users.map(u => (
+                          <option key={u.id} value={u.id}>{u.name || u.username} ({u.role})</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  {/* Create Task button - Admin only */}
+                  {currentUser?.role === 'Admin' && (
+                    <button className="btn btn-primary create-task-btn" onClick={handleOpenTaskAdd}>
+                      <Plus size={16} /> Create Task
+                    </button>
+                  )}
+                </div>
+              </section>
 
               {/* Kanban Column Grids */}
               <div className="kanban-board-container" style={{ display: 'flex', gap: '1rem', overflowX: 'auto', flex: 1, paddingBottom: '1rem', minHeight: '450px' }}>

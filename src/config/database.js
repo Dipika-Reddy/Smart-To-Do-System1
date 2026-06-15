@@ -1,11 +1,42 @@
 const { Pool } = require('pg');
 require('dotenv').config();
 const path = require('path');
+const fs = require('fs');
 
 let dbType = 'postgresql';
 let pgPool = null;
 let sqliteDb = null;
 let initError = null;
+
+async function createDatabaseBackup() {
+  if (dbType !== 'sqlite') return;
+  try {
+    const dbPath = path.resolve(__dirname, '../../todo.db');
+    const backupsDir = path.resolve(__dirname, '../../backups');
+    if (!fs.existsSync(backupsDir)) {
+      fs.mkdirSync(backupsDir, { recursive: true });
+    }
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const backupPath = path.join(backupsDir, `todo_checkpoint_${timestamp}.db`);
+    
+    // Copy the database file
+    fs.copyFileSync(dbPath, backupPath);
+    
+    // Clean up old backups, keeping only the last 5
+    const files = fs.readdirSync(backupsDir)
+      .filter(f => f.startsWith('todo_checkpoint_') && f.endsWith('.db'))
+      .map(f => ({ name: f, time: fs.statSync(path.join(backupsDir, f)).mtime.getTime() }))
+      .sort((a, b) => b.time - a.time);
+      
+    if (files.length > 5) {
+      for (let i = 5; i < files.length; i++) {
+        fs.unlinkSync(path.join(backupsDir, files[i].name));
+      }
+    }
+  } catch (err) {
+    console.error('Failed to create database rollback checkpoint:', err.message);
+  }
+}
 
 // Unified query function to be exported
 let query = async (sql, params = []) => {
@@ -24,6 +55,7 @@ let query = async (sql, params = []) => {
       } else {
         sqliteDb.run(sql, params, function(err) {
           if (err) return reject(err);
+          createDatabaseBackup().catch(e => console.error('Backup error:', e));
           resolve([{ insertId: this.lastID, affectedRows: this.changes }, null]);
         });
       }
@@ -84,6 +116,8 @@ async function initDatabase() {
     });
 
     sqliteDb.run('PRAGMA foreign_keys = ON');
+    sqliteDb.run('PRAGMA journal_mode = WAL');
+    sqliteDb.run('PRAGMA synchronous = NORMAL');
 
     await new Promise((resolve, reject) => {
       sqliteDb.serialize(() => {
@@ -210,6 +244,7 @@ async function initDatabase() {
               [hashedPassword],
               (updateErr) => {
                 if (updateErr) return reject(updateErr);
+                createDatabaseBackup().catch(e => console.error('Startup backup error:', e));
                 resolve();
               }
             );

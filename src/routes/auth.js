@@ -165,21 +165,23 @@ router.put('/change-password', authenticateToken, async (req, res) => {
 
 // POST /reset-password
 router.post('/reset-password', async (req, res) => {
-  const { username, newPassword } = req.body;
-  if (!username || !newPassword) {
-    return res.status(400).json({ error: 'Username/Employee ID and new password are required.' });
+  const { username, email, newPassword } = req.body;
+  if (!username || !email || !newPassword) {
+    return res.status(400).json({ error: 'Username/Employee ID, email, and new password are required.' });
   }
 
   try {
     const input = username.trim();
-    // Look up by employee_id or username
+    const targetEmail = email.trim().toLowerCase();
+
+    // Look up by (employee_id or username) AND email
     const [users] = await db.query(
-      "SELECT * FROM users WHERE employee_id = ? OR username = ?",
-      [input, input]
+      "SELECT * FROM users WHERE (LOWER(employee_id) = LOWER(?) OR LOWER(username) = LOWER(?)) AND LOWER(email) = LOWER(?)",
+      [input, input, targetEmail]
     );
 
     if (users.length === 0) {
-      return res.status(404).json({ error: 'User/Admin with this Employee ID/Username does not exist.' });
+      return res.status(404).json({ error: 'User/Admin with this Employee ID/Username and Email does not exist.' });
     }
 
     // Password rules check
@@ -218,7 +220,6 @@ router.post('/crm-login', async (req, res) => {
   }
 
   try {
-    const todoRole = role === 'admin' ? 'Admin' : 'User';
     const email = `${empId.toLowerCase()}@hps.internal`;
     const employee_id = empId.toLowerCase();
 
@@ -226,12 +227,16 @@ router.post('/crm-login', async (req, res) => {
     const [existing] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
 
     let userId;
+    let todoRole = 'User'; // Default to User role for safety
+
     if (existing.length > 0) {
       userId = existing[0].id;
-      // Update name/role in case it changed
+      todoRole = existing[0].role; // Keep the existing role to prevent escalation
+      
+      // Update name only
       await db.query(
-        'UPDATE users SET name = ?, role = ? WHERE id = ?',
-        [name, todoRole, userId]
+        'UPDATE users SET name = ? WHERE id = ?',
+        [name, userId]
       );
     } else {
       const bcrypt = require('bcryptjs');

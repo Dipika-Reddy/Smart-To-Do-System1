@@ -770,8 +770,8 @@ a:hover {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 1rem;
+  flex-wrap: nowrap;
+  gap: 1.5rem;
 }
 
 .sorting-wrapper {
@@ -2052,6 +2052,52 @@ a:hover {
     gap: 0.65rem;
   }
 
+  .tasks-sorting-container {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    width: 100%;
+  }
+
+  .sort-options-scroll-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 4px;
+  }
+
+  .sort-options-scroll-wrapper .sort-buttons {
+    display: inline-flex;
+    min-width: max-content;
+  }
+
+  .sort-options-scroll-wrapper .btn-sort {
+    font-size: 0.68rem; /* Reduced font size for mobile */
+    padding: 0.25rem 0.5rem;
+  }
+
+  .tasks-filters-actions-container {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+    width: 100%;
+  }
+
+  .categories-filter-bar, .users-filter-bar {
+    max-width: 100%;
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .filter-select {
+    flex: 1;
+    width: auto !important;
+  }
+
+  .create-task-btn {
+    width: 100%;
+  }
+
   /* Notes grid: single column */
   .notes-grid {
     grid-template-columns: 1fr !important;
@@ -2213,5 +2259,74 @@ a:hover {
 
 .password-toggle-btn:hover {
   color: var(--primary-color);
+}
+
+/* --- Custom responsive layout for sorting and filters (desktop by default) --- */
+.tasks-sorting-container {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: nowrap;
+}
+
+.sort-label-toggle-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sort-label-toggle-group .sort-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.sort-options-scroll-wrapper {
+  display: block;
+}
+
+.sort-options-scroll-wrapper .sort-buttons {
+  display: flex;
+  gap: 0.25rem;
+  padding: 3px;
+  background: var(--bg-tertiary);
+  border-radius: 8px;
+}
+
+.sort-options-scroll-wrapper .btn-sort {
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.tasks-filters-actions-container {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: nowrap;
+}
+
+.categories-filter-bar, .users-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--bg-secondary);
+  padding: 0.5rem 0.8rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.filter-bar-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.filter-select {
+  width: 180px !important;
+  padding: 0.35rem 0.75rem !important;
+  font-size: 0.85rem !important;
+  height: auto !important;
 }
 
