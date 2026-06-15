@@ -124,6 +124,7 @@ async function initDatabase() {
         // Users table
         sqliteDb.run(`CREATE TABLE IF NOT EXISTS users (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
+          employee_id VARCHAR(50) DEFAULT NULL,
           username TEXT NOT NULL,
           email TEXT UNIQUE NOT NULL,
           password TEXT NOT NULL,
@@ -131,6 +132,11 @@ async function initDatabase() {
           role TEXT CHECK(role IN ('Admin', 'User')) DEFAULT 'User',
           created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )`, (err) => { if (err) reject(err); });
+
+        // Migration: add employee_id column if it doesn't exist (for existing databases)
+        sqliteDb.run(`ALTER TABLE users ADD COLUMN employee_id VARCHAR(50) DEFAULT NULL`, () => {
+          // Ignore error - column may already exist
+        });
 
         // Categories table
         sqliteDb.run(`CREATE TABLE IF NOT EXISTS categories (
