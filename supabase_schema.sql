@@ -110,3 +110,46 @@ INSERT INTO categories (category_name) VALUES
 ('Health'),
 ('Others')
 ON CONFLICT (category_name) DO NOTHING;
+
+-- 9. Row Level Security (RLS) Enablement
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
+ALTER TABLE tasks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE checklist_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE task_updates ENABLE ROW LEVEL SECURITY;
+ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE activity_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE notes ENABLE ROW LEVEL SECURITY;
+
+-- 10. RLS Policies
+
+-- Users policies
+CREATE POLICY users_self_read ON users FOR SELECT USING (auth.uid()::text = employee_id OR role = 'Admin');
+CREATE POLICY users_insert ON users FOR INSERT WITH CHECK (true);
+CREATE POLICY users_self_update ON users FOR UPDATE USING (auth.uid()::text = employee_id OR role = 'Admin');
+CREATE POLICY users_self_delete ON users FOR DELETE USING (auth.uid()::text = employee_id OR role = 'Admin');
+
+-- Categories policies
+CREATE POLICY categories_read ON categories FOR SELECT USING (user_id IS NULL OR user_id::text = auth.uid()::text OR EXISTS (SELECT 1 FROM users WHERE employee_id = auth.uid()::text AND role = 'Admin'));
+CREATE POLICY categories_insert ON categories FOR INSERT WITH CHECK (user_id::text = auth.uid()::text OR EXISTS (SELECT 1 FROM users WHERE employee_id = auth.uid()::text AND role = 'Admin'));
+CREATE POLICY categories_update ON categories FOR UPDATE USING (user_id::text = auth.uid()::text OR EXISTS (SELECT 1 FROM users WHERE employee_id = auth.uid()::text AND role = 'Admin'));
+CREATE POLICY categories_delete ON categories FOR DELETE USING (user_id::text = auth.uid()::text OR EXISTS (SELECT 1 FROM users WHERE employee_id = auth.uid()::text AND role = 'Admin'));
+
+-- Tasks policies
+CREATE POLICY tasks_policy ON tasks FOR ALL USING (user_id::text = auth.uid()::text OR assigned_to::text = auth.uid()::text OR EXISTS (SELECT 1 FROM users WHERE employee_id = auth.uid()::text AND role = 'Admin'));
+
+-- Checklist items policies
+CREATE POLICY checklist_policy ON checklist_items FOR ALL USING (EXISTS (SELECT 1 FROM tasks WHERE tasks.id = checklist_items.task_id AND (tasks.user_id::text = auth.uid()::text OR tasks.assigned_to::text = auth.uid()::text OR EXISTS (SELECT 1 FROM users WHERE employee_id = auth.uid()::text AND role = 'Admin'))));
+
+-- Task updates policies
+CREATE POLICY task_updates_policy ON task_updates FOR ALL USING (EXISTS (SELECT 1 FROM tasks WHERE tasks.id = task_updates.task_id AND (tasks.user_id::text = auth.uid()::text OR tasks.assigned_to::text = auth.uid()::text OR EXISTS (SELECT 1 FROM users WHERE employee_id = auth.uid()::text AND role = 'Admin'))));
+
+-- Notifications policies
+CREATE POLICY notifications_policy ON notifications FOR ALL USING (user_id::text = auth.uid()::text OR EXISTS (SELECT 1 FROM users WHERE employee_id = auth.uid()::text AND role = 'Admin'));
+
+-- Activity logs policies
+CREATE POLICY activity_logs_policy ON activity_logs FOR ALL USING (user_id::text = auth.uid()::text OR EXISTS (SELECT 1 FROM users WHERE employee_id = auth.uid()::text AND role = 'Admin'));
+
+-- Notes policies
+CREATE POLICY notes_policy ON notes FOR ALL USING (user_id::text = auth.uid()::text);
+

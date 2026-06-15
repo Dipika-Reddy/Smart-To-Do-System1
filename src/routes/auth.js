@@ -3,13 +3,13 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const db = require('../config/database');
 const { JWT_SECRET } = require('../middleware/auth');
-const { validateRegister } = require('../middleware/validation');
+const { validateRegister, rateLimiter } = require('../middleware/validation');
 const { authenticateToken } = require('../middleware/auth');
 
 const router = express.Router();
 
 // POST /register
-router.post('/register', validateRegister, async (req, res) => {
+router.post('/register', rateLimiter, validateRegister, async (req, res) => {
   const { employee_id, username, email, password, name, role } = req.body;
   const userRole = role || 'User';
   const dbEmployeeId = userRole === 'Admin' ? null : (employee_id || username);
@@ -43,7 +43,7 @@ router.post('/register', validateRegister, async (req, res) => {
 });
 
 // POST /login
-router.post('/login', async (req, res) => {
+router.post('/login', rateLimiter, async (req, res) => {
   const { username, password } = req.body;
 
   if (!username || !password) {
@@ -164,7 +164,7 @@ router.put('/change-password', authenticateToken, async (req, res) => {
 });
 
 // POST /reset-password
-router.post('/reset-password', async (req, res) => {
+router.post('/reset-password', rateLimiter, async (req, res) => {
   const { username, email, newPassword } = req.body;
   if (!username || !email || !newPassword) {
     return res.status(400).json({ error: 'Username/Employee ID, email, and new password are required.' });

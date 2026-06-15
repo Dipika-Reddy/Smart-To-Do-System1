@@ -1,7 +1,7 @@
 const express = require('express');
 const db = require('../config/database');
 const { authenticateToken, authorizeRoles } = require('../middleware/auth');
-const { validateTask } = require('../middleware/validation');
+const { validateTask, sanitizeHtml } = require('../middleware/validation');
 
 const router = express.Router();
 
@@ -259,6 +259,18 @@ router.put('/reorder', async (req, res) => {
 
   if (!orders || !Array.isArray(orders)) {
     return res.status(400).json({ error: 'Invalid order payloads.' });
+  }
+
+  for (const item of orders) {
+    if (!item.id || isNaN(Number(item.id))) {
+      return res.status(400).json({ error: 'Invalid task ID in order payloads.' });
+    }
+    if (item.position === undefined || isNaN(Number(item.position))) {
+      return res.status(400).json({ error: 'Invalid position in order payloads.' });
+    }
+    if (item.status && !['Pending', 'In Progress', 'Review', 'Completed'].includes(item.status)) {
+      return res.status(400).json({ error: 'Invalid status in order payloads.' });
+    }
   }
 
   try {
@@ -566,15 +578,27 @@ router.post('/:id/updates', async (req, res) => {
       return res.status(403).json({ error: 'Access denied.' });
     }
 
+    // Sanitize and validate inputs
+    const cleanComment = sanitizeHtml(comment.trim());
+    const cleanStatus = status || task.status;
+    const cleanProgress = progress_percentage !== undefined ? Number(progress_percentage) : task.completion_percentage;
+
+    if (cleanProgress < 0 || cleanProgress > 100 || isNaN(cleanProgress)) {
+      return res.status(400).json({ error: 'Progress percentage must be between 0 and 100.' });
+    }
+    if (status && !['Pending', 'In Progress', 'Review', 'Completed'].includes(status)) {
+      return res.status(400).json({ error: 'Invalid task status.' });
+    }
+
     await db.query(
       `INSERT INTO task_updates (task_id, user_id, status, comment, progress_percentage) 
        VALUES (?, ?, ?, ?, ?)`,
       [
         id, 
         req.user.id, 
-        status || task.status, 
-        comment.trim(), 
-        progress_percentage !== undefined ? Number(progress_percentage) : task.completion_percentage
+        cleanStatus, 
+        cleanComment, 
+        cleanProgress
       ]
     );
 

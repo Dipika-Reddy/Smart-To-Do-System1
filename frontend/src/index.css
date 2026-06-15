@@ -1928,7 +1928,7 @@ a:hover {
     grid-template-columns: 240px 1fr;
   }
   .dashboard-stats {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, 1fr) !important;
   }
   .landing-main {
     padding: 2rem 2rem;
@@ -2052,7 +2052,7 @@ a:hover {
 
   /* Dashboard stats: 2-column grid */
   .dashboard-stats {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, 1fr) !important;
     gap: 0.75rem;
   }
   .stat-card {
