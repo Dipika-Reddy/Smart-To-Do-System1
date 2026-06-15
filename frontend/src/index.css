@@ -778,12 +778,15 @@ a:hover {
 .stat-details h4 {
   font-family: var(--font-heading);
   font-size: 1.1rem;
+  font-weight: 700;
   line-height: 1.1;
   margin-bottom: 0px;
+  color: var(--text-primary);
 }
 .stat-details p {
   font-size: 0.65rem;
-  color: var(--text-secondary);
+  color: var(--text-primary);
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.02em;
   margin-bottom: 0px;
