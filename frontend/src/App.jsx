@@ -691,52 +691,47 @@ function App() {
               <StatsDashboard />
 
               <section className="tasks-control-bar">
-                {/* Row 1: Sort By + Create Task button inline on desktop */}
-                <div className="tasks-sorting-row">
-                  {/* Sorting Section */}
-                  <div className="tasks-sorting-container">
-                    <div className="sort-label-toggle-group">
-                      <span className="sort-label">Sort cards:</span>
-                      <button 
-                        id="sort-order-toggle" 
-                        className="btn-icon-small" 
-                        onClick={toggleSortOrder}
-                        title="Toggle Order"
-                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                      >
-                        {activeFilters.order === 'ASC' ? <ArrowUp size={16} /> : <ArrowDown size={16} />}
-                      </button>
-                    </div>
-
-                    <div className="sort-options-scroll-wrapper">
-                      <div className="sort-buttons">
-                        {['position', 'due_date', 'priority', 'title', 'created_at'].map(criteria => (
-                          <button 
-                            key={criteria}
-                            className={`btn btn-sort ${activeFilters.sortBy === criteria ? 'active' : ''}`}
-                            onClick={() => handleSortChange(criteria)}
-                          >
-                            {criteria === 'position' ? 'Custom' : 
-                             criteria === 'due_date' ? 'Due Date' : 
-                             criteria === 'priority' ? 'Priority' : 
-                             criteria === 'title' ? 'Alphabetical' : 'Creation Date'}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
+                {currentUser?.role === 'Admin' && (
+                  <div className="tasks-create-btn-row">
+                    <button className="btn btn-primary create-task-btn" onClick={handleOpenTaskAdd}>
+                      <Plus size={16} /> Create Task
+                    </button>
+                  </div>
+                )}
+                {/* 1. Sorting Section */}
+                <div className="tasks-sorting-container">
+                  <div className="sort-label-toggle-group">
+                    <span className="sort-label">Sort cards:</span>
+                    <button 
+                      id="sort-order-toggle" 
+                      className="btn-icon-small" 
+                      onClick={toggleSortOrder}
+                      title="Toggle Order"
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    >
+                      {activeFilters.order === 'ASC' ? <ArrowUp size={16} /> : <ArrowDown size={16} />}
+                    </button>
                   </div>
 
-                  {/* Create Task button - inline with sort row for Admin on desktop */}
-                  {currentUser?.role === 'Admin' && (
-                    <div className="tasks-create-btn-row">
-                      <button className="btn btn-primary create-task-btn" onClick={handleOpenTaskAdd}>
-                        <Plus size={16} /> Create Task
-                      </button>
+                  <div className="sort-options-scroll-wrapper">
+                    <div className="sort-buttons">
+                      {['position', 'due_date', 'priority', 'title', 'created_at'].map(criteria => (
+                        <button 
+                          key={criteria}
+                          className={`btn btn-sort ${activeFilters.sortBy === criteria ? 'active' : ''}`}
+                          onClick={() => handleSortChange(criteria)}
+                        >
+                          {criteria === 'position' ? 'Custom' : 
+                           criteria === 'due_date' ? 'Due Date' : 
+                           criteria === 'priority' ? 'Priority' : 
+                           criteria === 'title' ? 'Alphabetical' : 'Creation Date'}
+                        </button>
+                      ))}
                     </div>
-                  )}
+                  </div>
                 </div>
 
-                {/* Row 2: Filters & Actions Section */}
+                {/* 2. Filters & Actions Section */}
                 <div className="tasks-filters-actions-container">
                   {/* Categories dropdown */}
                   <div className="categories-filter-bar">
