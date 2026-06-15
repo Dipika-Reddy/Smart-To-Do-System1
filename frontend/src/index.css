@@ -716,9 +716,15 @@ a:hover {
 /* Dashboard statistics cards */
 .dashboard-stats {
   display: grid;
-  grid-template-columns: repeat(8, 1fr);
-  gap: 0.5rem;
+  grid-template-columns: repeat(8, minmax(110px, 1fr));
+  gap: 0.65rem;
   margin-bottom: 1.25rem;
+}
+
+/* Widen stat cards inside the Tasks workspace only */
+.dashboard-stats .stat-card {
+  padding: 0.75rem 0.85rem;
+  gap: 0.6rem;
 }
 
 .stat-card {
@@ -2064,6 +2070,14 @@ a:hover {
     gap: 0.65rem;
   }
 
+  /* Sorting row: stack on mobile */
+  .tasks-sorting-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    width: 100%;
+  }
+
   .tasks-sorting-container {
     flex-direction: column;
     align-items: flex-start;
@@ -2104,6 +2118,12 @@ a:hover {
   .filter-select {
     flex: 1;
     width: auto !important;
+  }
+
+  /* Create Task: full width on mobile */
+  .tasks-create-btn-row {
+    width: 100%;
+    margin-left: 0;
   }
 
   .create-task-btn {
@@ -2342,10 +2362,18 @@ a:hover {
   height: auto !important;
 }
 
-.tasks-create-btn-row {
+/* Desktop: Sort By row with Create Task button inline */
+.tasks-sorting-row {
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  gap: 0.75rem;
   width: 100%;
+  flex-wrap: nowrap;
 }
 
-
+.tasks-create-btn-row {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  margin-left: auto;
+}
