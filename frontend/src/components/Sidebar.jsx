@@ -2,7 +2,7 @@ import React from 'react';
 import { useApp } from '../context/AppContext';
 import { ListTodo, FileText, CheckSquare, Search, Tag, Shield, BarChart2, Briefcase } from 'lucide-react';
 
-const Sidebar = () => {
+const Sidebar = ({ isOpen, onClose }) => {
   const { 
     tasks, 
     activeWorkspace, 
@@ -36,10 +36,15 @@ const Sidebar = () => {
     setActiveFilters(prev => ({ ...prev, priority }));
   };
 
+  const handleWorkspaceChange = (workspace) => {
+    setActiveWorkspace(workspace);
+    if (onClose) onClose();
+  };
+
   const isTaskWorkspace = activeWorkspace === 'tasks' || activeWorkspace === 'admin_dashboard';
 
   return (
-    <aside className="app-sidebar">
+    <aside className={`app-sidebar ${isOpen ? 'sidebar-open' : ''}`}>
       {/* Search Bar - only show for tasks workspace */}
       {isTaskWorkspace && (
         <div className="sidebar-box search-box" style={{ marginBottom: '1rem' }}>
@@ -64,19 +69,19 @@ const Sidebar = () => {
             <>
               <button 
                 className={`ws-tab-btn ${activeWorkspace === 'tasks' ? 'active' : ''}`}
-                onClick={() => setActiveWorkspace('tasks')}
+                onClick={() => handleWorkspaceChange('tasks')}
               >
                 <ListTodo size={16} /> Tasks
               </button>
               <button 
                 className={`ws-tab-btn ${activeWorkspace === 'admin_dashboard' ? 'active' : ''}`}
-                onClick={() => setActiveWorkspace('admin_dashboard')}
+                onClick={() => handleWorkspaceChange('admin_dashboard')}
               >
                 <Shield size={16} /> Analytics
               </button>
               <button 
                 className={`ws-tab-btn ${activeWorkspace === 'admin_reports' ? 'active' : ''}`}
-                onClick={() => setActiveWorkspace('admin_reports')}
+                onClick={() => handleWorkspaceChange('admin_reports')}
               >
                 <BarChart2 size={16} /> Performance Analytics
               </button>
@@ -85,19 +90,19 @@ const Sidebar = () => {
             <>
               <button 
                 className={`ws-tab-btn ${activeWorkspace === 'tasks' ? 'active' : ''}`}
-                onClick={() => setActiveWorkspace('tasks')}
+                onClick={() => handleWorkspaceChange('tasks')}
               >
                 <ListTodo size={16} /> Tasks
               </button>
               <button 
                 className={`ws-tab-btn ${activeWorkspace === 'notes' ? 'active' : ''}`}
-                onClick={() => setActiveWorkspace('notes')}
+                onClick={() => handleWorkspaceChange('notes')}
               >
                 <FileText size={16} /> Notes
               </button>
               <button 
                 className={`ws-tab-btn ${activeWorkspace === 'checklists' ? 'active' : ''}`}
-                onClick={() => setActiveWorkspace('checklists')}
+                onClick={() => handleWorkspaceChange('checklists')}
               >
                 <CheckSquare size={16} /> Checklists
               </button>

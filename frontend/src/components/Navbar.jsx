@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useApp } from '../context/AppContext';
-import { CheckCircle2, Sun, Moon, History, UserCircle, FileSpreadsheet, FileText, LogOut, Settings, Bell, Shield } from 'lucide-react';
+import { CheckCircle2, Sun, Moon, History, UserCircle, FileSpreadsheet, FileText, LogOut, Settings, Bell, Shield, Menu, X } from 'lucide-react';
 
-const Navbar = ({ onOpenProfile, onOpenActivity, onOpenNotifications, onExportCsv, onExportPdf, onOpenUsers }) => {
+const Navbar = ({ onOpenProfile, onOpenActivity, onOpenNotifications, onExportCsv, onExportPdf, onOpenUsers, onToggleSidebar, isSidebarOpen }) => {
   const { currentUser, theme, toggleTheme, logoutUser, notifications } = useApp();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -22,14 +22,26 @@ const Navbar = ({ onOpenProfile, onOpenActivity, onOpenNotifications, onExportCs
 
   return (
     <nav className="app-navbar">
-      <div className="logo">
-        <img src="/logo.png" alt="SmartTodo Logo" style={{ width: '28px', height: '28px', objectFit: 'contain' }} />
-        <span>SmartTodo</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
         {currentUser && (
-          <span className={`badge ${currentUser.role === 'Admin' ? 'badge-priority-high' : 'badge-priority-low'}`} style={{ marginLeft: '8px', fontSize: '0.7rem' }}>
-            {currentUser.role}
-          </span>
+          <button 
+            className="mobile-menu-toggle" 
+            onClick={onToggleSidebar}
+            title={isSidebarOpen ? "Close menu" : "Open menu"}
+            aria-label={isSidebarOpen ? "Close menu" : "Open menu"}
+          >
+            {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
         )}
+        <div className="logo">
+          <img src="/logo.png" alt="SmartTodo Logo" style={{ width: '28px', height: '28px', objectFit: 'contain' }} />
+          <span>SmartTodo</span>
+          {currentUser && (
+            <span className={`badge ${currentUser.role === 'Admin' ? 'badge-priority-high' : 'badge-priority-low'}`} style={{ marginLeft: '8px', fontSize: '0.7rem' }}>
+              {currentUser.role}
+            </span>
+          )}
+        </div>
       </div>
 
       <div className="nav-right">

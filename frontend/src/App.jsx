@@ -114,6 +114,9 @@ function App() {
   // PDF Export Layout Local State
   const [printTasks, setPrintTasks] = useState([]);
 
+  // Mobile Sidebar open state
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   // ================= DRAG AND DROP HANDLERS (KANBAN COLUMNS) =================
   const handleDragStart = (e, taskId) => {
     setDraggedTaskId(taskId);
@@ -649,10 +652,18 @@ function App() {
         onOpenUsers={() => setUsersModalOpen(true)}
         onExportCsv={handleExportCsv}
         onExportPdf={handleExportPdf}
+        onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+        isSidebarOpen={sidebarOpen}
       />
 
       <div className="app-layout">
-        <Sidebar />
+        <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+        {sidebarOpen && (
+          <div 
+            className="sidebar-backdrop" 
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
 
         <main className="app-main">
 
@@ -662,34 +673,44 @@ function App() {
               
               <StatsDashboard />
 
-              <section className="tasks-control-bar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-                <div className="sorting-wrapper" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                  <span>Sort cards:</span>
-                  <div className="sort-buttons" style={{ display: 'flex', gap: '0.25rem' }}>
-                    {['position', 'due_date', 'priority', 'title', 'created_at'].map(criteria => (
-                      <button 
-                        key={criteria}
-                        className={`btn btn-sort ${activeFilters.sortBy === criteria ? 'active' : ''}`}
-                        onClick={() => handleSortChange(criteria)}
-                      >
-                        {criteria === 'position' ? 'Custom' : 
-                         criteria === 'due_date' ? 'Due Date' : 
-                         criteria === 'priority' ? 'Priority' : 
-                         criteria === 'title' ? 'Alphabetical' : 'Creation Date'}
-                      </button>
-                    ))}
+              <section className="tasks-control-bar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', width: '100%' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '0.5rem', flex: 1, minWidth: '280px' }}>
+                  {/* Row 1: Sort label and Asc/Desc toggle arrow beside it */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Sort cards:</span>
+                    <button 
+                      id="sort-order-toggle" 
+                      className="btn-icon-small" 
+                      onClick={toggleSortOrder}
+                      title="Toggle Order"
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    >
+                      {activeFilters.order === 'ASC' ? <ArrowUp size={16} /> : <ArrowDown size={16} />}
+                    </button>
                   </div>
-                  <button 
-                    id="sort-order-toggle" 
-                    className="btn-icon-small" 
-                    onClick={toggleSortOrder}
-                    title="Toggle Order"
-                  >
-                    {activeFilters.order === 'ASC' ? <ArrowUp size={16} /> : <ArrowDown size={16} />}
-                  </button>
+
+                  {/* Row 2: Options buttons container on a single line, scrollable horizontally */}
+                  <div style={{ width: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch', paddingBottom: '4px' }}>
+                    <div className="sort-buttons" style={{ display: 'inline-flex', gap: '0.25rem', padding: '3px', background: 'var(--bg-tertiary)', borderRadius: '8px', minWidth: 'max-content' }}>
+                      {['position', 'due_date', 'priority', 'title', 'created_at'].map(criteria => (
+                        <button 
+                          key={criteria}
+                          className={`btn btn-sort ${activeFilters.sortBy === criteria ? 'active' : ''}`}
+                          onClick={() => handleSortChange(criteria)}
+                          style={{ whiteSpace: 'nowrap' }}
+                        >
+                          {criteria === 'position' ? 'Custom' : 
+                           criteria === 'due_date' ? 'Due Date' : 
+                           criteria === 'priority' ? 'Priority' : 
+                           criteria === 'title' ? 'Alphabetical' : 'Creation Date'}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
+
                 {currentUser?.role === 'Admin' && (
-                  <button className="btn btn-primary" onClick={handleOpenTaskAdd}>
+                  <button className="btn btn-primary" onClick={handleOpenTaskAdd} style={{ height: 'fit-content' }}>
                     <Plus size={16} /> Create Task
                   </button>
                 )}

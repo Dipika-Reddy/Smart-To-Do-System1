@@ -229,6 +229,14 @@ a:hover {
   transform: scale(1.05);
 }
 
+.mobile-menu-toggle {
+  display: none;
+}
+
+.sidebar-backdrop {
+  display: none;
+}
+
 .btn-icon-small {
   background: transparent;
   border: none;
@@ -1949,6 +1957,8 @@ a:hover {
   /* Full width layout: sidebar hidden by default */
   .app-layout {
     grid-template-columns: 1fr;
+    max-width: 100vw;
+    overflow-x: hidden;
   }
   .app-sidebar {
     display: none;
@@ -1967,6 +1977,32 @@ a:hover {
     border-right: 1px solid var(--border-color);
   }
 
+  .mobile-menu-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    transition: background-color 0.2s;
+  }
+  .mobile-menu-toggle:hover {
+    background: var(--bg-tertiary);
+  }
+
+  .sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 64px 0 0 0;
+    background: rgba(45, 18, 77, 0.3);
+    backdrop-filter: blur(2px);
+    z-index: 30;
+  }
+
   /* Navbar */
   .app-navbar {
     padding: 0.75rem 1rem;
@@ -1980,6 +2016,8 @@ a:hover {
   .app-main {
     padding: 1rem;
     gap: 1rem;
+    max-width: 100vw;
+    overflow-x: hidden;
   }
 
   /* Dashboard stats: 2-column grid */
@@ -2013,14 +2051,6 @@ a:hover {
     align-items: flex-start;
     gap: 0.65rem;
   }
-  .sorting-wrapper {
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    width: 100%;
-  }
-  .sort-buttons {
-    flex-wrap: wrap;
-  }
 
   /* Notes grid: single column */
   .notes-grid {
@@ -2038,7 +2068,7 @@ a:hover {
   }
 
   /* Slideovers: full width */
-  .slideover-panel {
+  .slideover-content {
     width: 100% !important;
     max-width: 100% !important;
   }
@@ -2101,7 +2131,7 @@ a:hover {
 
   /* Kanban narrower column min */
   .kanban-board-container > div {
-    min-width: 200px !important;
+    min-width: 270px !important;
   }
 
   /* Navbar compact */
