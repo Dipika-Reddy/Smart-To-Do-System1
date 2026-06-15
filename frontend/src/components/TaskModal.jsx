@@ -19,8 +19,9 @@ const TaskModal = ({ isOpen, task, onClose }) => {
 
   const isEdit = !!task;
   const isAdmin = currentUser?.role === 'Admin';
-  // Check if this task is created by Admin and assigned to current user who is not Admin
-  const isLockedForUser = !isAdmin && task && task.user_id !== currentUser?.id;
+  const isCompleted = task && task.status === 'Completed';
+  // Check if this task is created by Admin and assigned to current user who is not Admin, or if it is completed
+  const isLockedForUser = (!isAdmin && task && task.user_id !== currentUser?.id) || isCompleted;
 
   // Load comments/timeline for the task
   const loadComments = async () => {
@@ -319,7 +320,7 @@ const TaskModal = ({ isOpen, task, onClose }) => {
 
           {/* Modal Actions */}
           <div className="modal-actions">
-            {isEdit && isAdmin && (
+            {isEdit && isAdmin && !isCompleted && (
               <button 
                 type="button" 
                 className="btn btn-danger" 
@@ -330,7 +331,7 @@ const TaskModal = ({ isOpen, task, onClose }) => {
               </button>
             )}
             <button type="button" className="btn btn-ghost modal-close" onClick={onClose}>Cancel</button>
-            <button type="submit" className="btn btn-primary" id="task-form-submit">
+            <button type="submit" className="btn btn-primary" id="task-form-submit" disabled={isCompleted}>
               {isEdit ? 'Save Changes' : 'Create Task'}
             </button>
           </div>

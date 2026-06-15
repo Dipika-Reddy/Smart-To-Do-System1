@@ -980,16 +980,24 @@ function App() {
                               })()}
                             </td>
                             <td style={{ padding: '0.75rem 0.5rem', display: 'flex', gap: '0.5rem' }}>
-                              <button className="btn btn-ghost btn-small" onClick={() => handleOpenTaskEdit(t)}>
-                                {t.status === 'Review' ? 'Review Submission' : 'Edit details'}
-                              </button>
-                              <button 
-                                className="btn btn-ghost btn-small" 
-                                onClick={() => handleDeleteTask(t.id, t.title)}
-                                style={{ color: 'var(--danger-color)' }}
-                              >
-                                Delete
-                              </button>
+                              {t.status === 'Completed' ? (
+                                <button className="btn btn-ghost btn-small" onClick={() => handleOpenTaskEdit(t)}>
+                                  View task
+                                </button>
+                              ) : (
+                                <>
+                                  <button className="btn btn-ghost btn-small" onClick={() => handleOpenTaskEdit(t)}>
+                                    {t.status === 'Review' ? 'Review Submission' : 'Edit details'}
+                                  </button>
+                                  <button 
+                                    className="btn btn-ghost btn-small" 
+                                    onClick={() => handleDeleteTask(t.id, t.title)}
+                                    style={{ color: 'var(--danger-color)' }}
+                                  >
+                                    Delete
+                                  </button>
+                                </>
+                              )}
                             </td>
                           </tr>
                         ))}

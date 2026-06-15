@@ -41,8 +41,8 @@ const TaskCard = ({ task, onEdit, dragHandlers, isDraggable }) => {
   };
 
   // Permissions gate
-  const canModifyMetadata = isAdmin;
-  const canDeleteTask = isAdmin;
+  const canModifyMetadata = isAdmin && !isCompleted;
+  const canDeleteTask = isAdmin && !isCompleted;
 
   // Load checklists on task.id change
   const loadChecklist = async () => {
