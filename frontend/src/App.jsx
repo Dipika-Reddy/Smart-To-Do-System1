@@ -684,9 +684,20 @@ function App() {
           {isTasksWorkspace && (
             <div id="tasks-workspace" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', height: '100%' }}>
               
+              <div className="workspace-header-bar">
+                <h2>Tasks</h2>
+              </div>
+
               <StatsDashboard />
 
               <section className="tasks-control-bar">
+                {currentUser?.role === 'Admin' && (
+                  <div className="tasks-create-btn-row">
+                    <button className="btn btn-primary create-task-btn" onClick={handleOpenTaskAdd}>
+                      <Plus size={16} /> Create Task
+                    </button>
+                  </div>
+                )}
                 {/* 1. Sorting Section */}
                 <div className="tasks-sorting-container">
                   <div className="sort-label-toggle-group">
@@ -762,12 +773,6 @@ function App() {
                     </div>
                   )}
 
-                  {/* Create Task button - Admin only */}
-                  {currentUser?.role === 'Admin' && (
-                    <button className="btn btn-primary create-task-btn" onClick={handleOpenTaskAdd}>
-                      <Plus size={16} /> Create Task
-                    </button>
-                  )}
                 </div>
               </section>
 

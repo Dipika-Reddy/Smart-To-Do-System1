@@ -768,10 +768,10 @@ a:hover {
 /* Tasks Control Bar (Sorting & Add Task) */
 .tasks-control-bar {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: nowrap;
-  gap: 1.5rem;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+  width: 100%;
 }
 
 .sorting-wrapper {
@@ -2329,4 +2329,11 @@ a:hover {
   font-size: 0.85rem !important;
   height: auto !important;
 }
+
+.tasks-create-btn-row {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+}
+
 
