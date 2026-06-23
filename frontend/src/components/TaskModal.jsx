@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import API from '../services/api';
 import { X, Send, User, MessageSquare } from 'lucide-react';
+import { parseNaiveToLocalDate, formatDateForInput } from '../utils/dateFormatter';
 
 const TaskModal = ({ isOpen, task, onClose }) => {
   const { categories, loadTasks, showToast, users, loadUsers, currentUser, syncAllData } = useApp();
@@ -35,19 +36,7 @@ const TaskModal = ({ isOpen, task, onClose }) => {
     }
   };
 
-  const formatDateForInput = (dateString) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return '';
-    
-    const yyyy = date.getFullYear();
-    const mm = String(date.getMonth() + 1).padStart(2, '0');
-    const dd = String(date.getDate()).padStart(2, '0');
-    const hh = String(date.getHours()).padStart(2, '0');
-    const min = String(date.getMinutes()).padStart(2, '0');
-    
-    return `${yyyy}-${mm}-${dd}T${hh}:${min}`;
-  };
+
 
   // Initialize form fields on open/edit
   useEffect(() => {
@@ -92,7 +81,7 @@ const TaskModal = ({ isOpen, task, onClose }) => {
     }
 
     const now = new Date();
-    const selectedDate = new Date(dueDate);
+    const selectedDate = parseNaiveToLocalDate(dueDate);
     if (!isEdit && !isLockedForUser && selectedDate < now) {
       showToast('Due date cannot be set in the past.', 'warning');
       return;

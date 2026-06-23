@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import API from '../services/api';
+import { parseNaiveToLocalDate } from '../utils/dateFormatter';
 
 const AppContext = createContext();
 
@@ -348,7 +349,7 @@ export const AppProvider = ({ children }) => {
       if (task.status === 'Completed' || task.status === 'Review') return;
       if (notifiedTaskIds.has(task.id)) return;
 
-      const dueDate = new Date(task.due_date);
+      const dueDate = parseNaiveToLocalDate(task.due_date);
       const diffMs = dueDate - now;
       const diffMins = diffMs / 60000;
 

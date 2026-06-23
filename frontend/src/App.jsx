@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useApp } from './context/AppContext';
 import API from './services/api';
+import { parseNaiveToLocalDate, formatTaskTrackingDateTime } from './utils/dateFormatter';
 
 // Components
 import Navbar from './components/Navbar';
@@ -852,7 +853,7 @@ function App() {
                   inProgress: filteredTasksForAdmin.filter(t => t.status === 'In Progress').length,
                   review: filteredTasksForAdmin.filter(t => t.status === 'Review').length,
                   completed: filteredTasksForAdmin.filter(t => t.status === 'Completed').length,
-                  overdue: filteredTasksForAdmin.filter(t => t.status !== 'Completed' && new Date(t.due_date) < now).length,
+                  overdue: filteredTasksForAdmin.filter(t => t.status !== 'Completed' && parseNaiveToLocalDate(t.due_date) < now).length,
                 };
 
             return (
@@ -973,11 +974,7 @@ function App() {
                               </div>
                             </td>
                             <td style={{ padding: '0.75rem 0.5rem' }}>
-                              {(() => {
-                                const d = new Date(t.due_date);
-                                const pad = (n) => String(n).padStart(2, '0');
-                                return `${d.toLocaleDateString()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-                              })()}
+                              {formatTaskTrackingDateTime(t.due_date)}
                             </td>
                             <td style={{ padding: '0.75rem 0.5rem', display: 'flex', gap: '0.5rem' }}>
                               {t.status === 'Completed' ? (
@@ -1251,7 +1248,7 @@ function App() {
                   <td>{t.category_name || 'None'}</td>
                   <td>{t.priority}</td>
                   <td>{t.status}</td>
-                  <td>{new Date(t.due_date).toLocaleString()}</td>
+                  <td>{formatTaskTrackingDateTime(t.due_date)}</td>
                   <td>{t.assignee_name || 'Unassigned'}</td>
                 </tr>
               ))}

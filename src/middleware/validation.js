@@ -123,9 +123,11 @@ const validateTask = (req, res, next) => {
     return res.status(400).json({ error: 'Invalid due date format.' });
   }
 
-  // Compare due date against current time
+  // Compare due date against current time, allowing a 24-hour buffer for timezone differences.
+  // The client side performs the exact local validation.
   const now = new Date();
-  if (req.method === 'POST' && parsedDueDate.getTime() < now.getTime()) {
+  const timezoneBufferMs = 24 * 60 * 60 * 1000;
+  if (req.method === 'POST' && parsedDueDate.getTime() < (now.getTime() - timezoneBufferMs)) {
     return res.status(400).json({ error: 'Due date cannot be in the past.' });
   }
 

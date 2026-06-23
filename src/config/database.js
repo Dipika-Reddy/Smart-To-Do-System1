@@ -1,4 +1,6 @@
-const { Pool } = require('pg');
+const { Pool, types } = require('pg');
+// Override parsing for timestamp without time zone (OID 1114) to return raw string directly
+types.setTypeParser(1114, (val) => val);
 require('dotenv').config();
 const path = require('path');
 const fs = require('fs');

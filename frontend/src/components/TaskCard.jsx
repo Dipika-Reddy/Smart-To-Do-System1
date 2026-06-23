@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 import API from '../services/api';
+import { parseNaiveToLocalDate, formatTaskDueDateTime } from '../utils/dateFormatter';
 import { 
   GripVertical, Check, Tag, Calendar, Clock, Edit2, Trash2, 
   ChevronUp, ChevronsUp, ChevronDown, CheckCircle2, AlertTriangle,
@@ -24,7 +25,7 @@ const TaskCard = ({ task, onEdit, dragHandlers, isDraggable }) => {
 
   const isCompleted = task.status === 'Completed';
   const now = new Date();
-  const dueDate = new Date(task.due_date);
+  const dueDate = parseNaiveToLocalDate(task.due_date);
   const isOverdue = !isCompleted && dueDate < now;
   const isAdmin = currentUser?.role === 'Admin';
   const isPersonalTask = task.user_id === currentUser?.id && task.assigned_to === currentUser?.id;
@@ -342,15 +343,7 @@ const TaskCard = ({ task, onEdit, dragHandlers, isDraggable }) => {
     );
   };
 
-  const formatDateTime = (date) => {
-    const pad = (num) => String(num).padStart(2, '0');
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const month = months[date.getMonth()];
-    const day = date.getDate();
-    const hours = pad(date.getHours());
-    const minutes = pad(date.getMinutes());
-    return `${month} ${day}, ${hours}:${minutes}`;
-  };
+
 
   return (
     <div 
@@ -620,7 +613,7 @@ const TaskCard = ({ task, onEdit, dragHandlers, isDraggable }) => {
           {/* Footer Metadata */}
           <div className="task-card-meta" style={{ marginTop: '0.45rem', fontSize: '0.7rem', color: 'var(--text-muted)', borderTop: '1px dashed var(--border-color)', paddingTop: '0.35rem' }}>
             <span className={`meta-due-date ${isOverdue ? 'danger-text' : ''}`}>
-              <Calendar size={10} /> {formatDateTime(dueDate)}
+              <Calendar size={10} /> {formatTaskDueDateTime(task.due_date)}
             </span>
             {getRemainingTimeBadge()}
           </div>

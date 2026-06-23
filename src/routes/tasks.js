@@ -2,6 +2,7 @@ const express = require('express');
 const db = require('../config/database');
 const { authenticateToken, authorizeRoles } = require('../middleware/auth');
 const { validateTask, sanitizeHtml } = require('../middleware/validation');
+const { normalizeDueDate, formatTaskNotificationDateTime } = require('../utils/dateFormatter');
 
 const router = express.Router();
 
@@ -141,7 +142,11 @@ const getTasks = async (req, res) => {
     }
 
     const [rows] = await db.query(sql, params);
-    res.json(rows);
+    const normalizedTasks = rows.map(t => ({
+      ...t,
+      due_date: normalizeDueDate(t.due_date)
+    }));
+    res.json(normalizedTasks);
   } catch (error) {
     console.error('Fetch tasks error:', error);
     res.status(500).json({ error: 'Internal server error fetching tasks.' });
@@ -176,6 +181,7 @@ router.get('/:id', async (req, res) => {
     }
 
     const task = rows[0];
+    task.due_date = normalizeDueDate(task.due_date);
     const userRole = (req.user.role || '').trim().toLowerCase();
     if (userRole !== 'admin' && task.user_id !== userId && task.assigned_to !== userId) {
       return res.status(403).json({ error: 'Access denied.' });
@@ -228,7 +234,7 @@ router.post('/', authorizeRoles('Admin'), validateTask, async (req, res) => {
       await createNotification(
         assignee,
         'New Task Assigned',
-        `Admin assigned task: "${title.trim()}" to you. Due date: ${new Date(due_date).toLocaleString()}.`
+        `Admin assigned task: "${title.trim()}" to you. Due date: ${formatTaskNotificationDateTime(due_date)}.`
       );
     }
 
@@ -240,7 +246,7 @@ router.post('/', authorizeRoles('Admin'), validateTask, async (req, res) => {
         description,
         category_id,
         priority,
-        due_date,
+        due_date: normalizeDueDate(due_date),
         position,
         status: 'Pending',
         assigned_to: assignee
@@ -433,7 +439,7 @@ router.put('/:id', validateTask, async (req, res) => {
       await createNotification(
         nextAssignee,
         'Task Assignment Reassigned',
-        `You have been assigned to task: "${title.trim()}". Due date: ${new Date(due_date).toLocaleString()}.`
+        `You have been assigned to task: "${title.trim()}". Due date: ${formatTaskNotificationDateTime(due_date)}.`
       );
     } else if (isAdmin && task.assigned_to && nextAssignee === task.assigned_to) {
       // Notify assignee if Admin updated task details

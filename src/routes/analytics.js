@@ -1,6 +1,7 @@
 const express = require('express');
 const db = require('../config/database');
 const { authenticateToken, authorizeRoles } = require('../middleware/auth');
+const { parseNaiveToLocalDate } = require('../utils/dateFormatter');
 
 const router = express.Router();
 
@@ -9,7 +10,7 @@ router.use(authenticateToken);
 // Helper to check overdue counts
 const calculateOverdueTasks = (tasksList) => {
   const now = new Date();
-  return tasksList.filter(t => t.status !== 'Completed' && new Date(t.due_date) < now).length;
+  return tasksList.filter(t => t.status !== 'Completed' && parseNaiveToLocalDate(t.due_date) < now).length;
 };
 
 // GET /api/analytics/dashboard - Fetch status aggregates & general dashboard data
@@ -40,7 +41,7 @@ router.get('/dashboard', async (req, res) => {
     
     // Calculate overdue (Pending/In Progress/Review and due date passed)
     const now = new Date();
-    const overdue = tasks.filter(t => t.status !== 'Completed' && new Date(t.due_date) < now).length;
+    const overdue = tasks.filter(t => t.status !== 'Completed' && parseNaiveToLocalDate(t.due_date) < now).length;
 
     // Calculate Productivity Score: (completed / total) * 100
     const productivityScore = total > 0 ? Math.round((completed / total) * 100) : 0;
@@ -80,7 +81,7 @@ router.get('/performance', authorizeRoles('Admin'), async (req, res) => {
       const review = userTasks.filter(t => t.status === 'Review').length;
 
       const now = new Date();
-      const overdue = userTasks.filter(t => t.status !== 'Completed' && new Date(t.due_date) < now).length;
+      const overdue = userTasks.filter(t => t.status !== 'Completed' && parseNaiveToLocalDate(t.due_date) < now).length;
 
       // Completion Rate
       const completionRate = totalAssigned > 0 ? Math.round((completed / totalAssigned) * 100) : 0;
