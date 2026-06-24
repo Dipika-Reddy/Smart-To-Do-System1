@@ -159,11 +159,30 @@ const WorkStatusWorkspace = () => {
       showToast(res.message, 'success');
       setHasExistingReport(true);
       fetchUserHistory();
+      setSummary('');
+      setTasksCompleted('');
+      setTasksInProgress('');
+      setBlockers('');
     } catch (err) {
       showToast(err.message, 'danger');
     } finally {
       setLoading(false);
     }
+  };
+
+  const parseUtcDate = (dateVal) => {
+    if (!dateVal) return null;
+    if (dateVal instanceof Date) return dateVal;
+    if (typeof dateVal === 'string') {
+      if (dateVal.includes('Z') || dateVal.includes('+')) {
+        return new Date(dateVal);
+      }
+      const normalized = dateVal.replace(' ', 'T');
+      if (normalized.includes('T') && !normalized.endsWith('Z')) {
+        return new Date(normalized + 'Z');
+      }
+    }
+    return new Date(dateVal);
   };
 
   // Format date helper for UI
@@ -387,7 +406,7 @@ const WorkStatusWorkspace = () => {
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-muted)', fontSize: '0.8rem' }}>
                       <Clock size={14} />
-                      <span>Submitted at {new Date(report.created_at).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false })}</span>
+                      <span>Submitted at {parseUtcDate(report.created_at).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false })}</span>
                     </div>
                   </div>
 
