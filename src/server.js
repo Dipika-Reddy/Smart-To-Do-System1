@@ -12,6 +12,7 @@ const usersRoutes = require('./routes/users');
 const checklistsRoutes = require('./routes/checklists');
 const notificationsRoutes = require('./routes/notifications');
 const analyticsRoutes = require('./routes/analytics');
+const eodRoutes = require('./routes/eod');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -56,6 +57,7 @@ app.use('/api/users', usersRoutes);
 app.use('/api/checklists', checklistsRoutes);
 app.use('/api/notifications', notificationsRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/eod', eodRoutes);
 
 // Fallback to Legacy SPA Frontend
 app.get('/legacy/*', (req, res) => {

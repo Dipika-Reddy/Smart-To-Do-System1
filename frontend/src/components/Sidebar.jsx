@@ -85,6 +85,12 @@ const Sidebar = ({ isOpen, onClose }) => {
               >
                 <BarChart2 size={16} /> Performance Analytics
               </button>
+              <button 
+                className={`ws-tab-btn ${activeWorkspace === 'work_status' ? 'active' : ''}`}
+                onClick={() => handleWorkspaceChange('work_status')}
+              >
+                <Briefcase size={16} /> Work Status
+              </button>
             </>
           ) : (
             <>
@@ -105,6 +111,12 @@ const Sidebar = ({ isOpen, onClose }) => {
                 onClick={() => handleWorkspaceChange('checklists')}
               >
                 <CheckSquare size={16} /> Checklists
+              </button>
+              <button 
+                className={`ws-tab-btn ${activeWorkspace === 'work_status' ? 'active' : ''}`}
+                onClick={() => handleWorkspaceChange('work_status')}
+              >
+                <Briefcase size={16} /> Work Status
               </button>
             </>
           )}

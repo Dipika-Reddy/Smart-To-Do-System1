@@ -13,6 +13,7 @@ import ChecklistCard from './components/ChecklistCard';
 import ToastContainer from './components/ToastContainer';
 import ActivityLogSlideover from './components/ActivityLogSlideover';
 import NotificationCenter from './components/NotificationCenter';
+import WorkStatusWorkspace from './components/WorkStatusWorkspace';
 
 // Modals
 import TaskModal from './components/TaskModal';
@@ -1164,6 +1165,11 @@ function App() {
                 )}
               </div>
             </div>
+          )}
+
+          {/* 6. WORK STATUS WORKSPACE */}
+          {activeWorkspace === 'work_status' && (
+            <WorkStatusWorkspace />
           )}
         </main>
       </div>

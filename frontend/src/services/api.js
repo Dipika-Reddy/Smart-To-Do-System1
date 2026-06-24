@@ -252,6 +252,30 @@ const API = {
     return this.request(`/api/notes/${id}`, {
       method: 'DELETE'
     });
+  },
+
+  // ================= EOD REPORTS =================
+  async getEodReport(date) {
+    return this.request(`/api/eod/today?date=${date}`);
+  },
+
+  async getEodSuggestions() {
+    return this.request('/api/eod/suggestions');
+  },
+
+  async saveEodReport(reportData) {
+    return this.request('/api/eod', {
+      method: 'POST',
+      body: JSON.stringify(reportData)
+    });
+  },
+
+  async getEodHistory() {
+    return this.request('/api/eod/history');
+  },
+
+  async getAllEodReports(date) {
+    return this.request(`/api/eod/all?date=${date}`);
   }
 };
 

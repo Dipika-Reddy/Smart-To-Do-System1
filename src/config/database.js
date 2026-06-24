@@ -236,6 +236,20 @@ async function initDatabase() {
           FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
         )`, (err) => { if (err) reject(err); });
 
+        // EOD Reports table
+        sqliteDb.run(`CREATE TABLE IF NOT EXISTS eod_reports (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          user_id INTEGER NOT NULL,
+          report_date TEXT NOT NULL,
+          summary TEXT NOT NULL,
+          tasks_completed TEXT,
+          tasks_in_progress TEXT,
+          blockers TEXT,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+          UNIQUE(user_id, report_date)
+        )`, (err) => { if (err) reject(err); });
+
         // Seed categories
         const categories = ['Personal', 'Academic', 'Work', 'Health', 'Others'];
         const stmt = sqliteDb.prepare("INSERT OR IGNORE INTO categories (category_name) VALUES (?)");
@@ -366,6 +380,18 @@ async function initDatabase() {
       pattern_theme VARCHAR(50) DEFAULT 'blank',
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )`);
+
+    await pgPool.query(`CREATE TABLE IF NOT EXISTS eod_reports (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      report_date VARCHAR(50) NOT NULL,
+      summary TEXT NOT NULL,
+      tasks_completed TEXT,
+      tasks_in_progress TEXT,
+      blockers TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(user_id, report_date)
     )`);
 
     // Seed categories
