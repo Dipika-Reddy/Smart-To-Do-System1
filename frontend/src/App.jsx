@@ -645,6 +645,16 @@ function App() {
   // Filter tasks arrays for Kanban display
   const kanbanTasks = tasks.filter(task => {
     const matchesUserFilter = !selectedUserFilter || task.assigned_to === Number(selectedUserFilter);
+    
+    const now = new Date();
+    const matchesStatusFilter = !selectedStatusFilter || (
+      selectedStatusFilter === 'overdue'
+        ? task.status !== 'Completed' && parseNaiveToLocalDate(task.due_date) < now
+        : task.status === selectedStatusFilter
+    );
+
+    if (!matchesStatusFilter) return false;
+
     if (currentUser.role === 'Admin') {
       return matchesUserFilter; // Admin sees all matching selection
     }
@@ -776,6 +786,25 @@ function App() {
                         {users.map(u => (
                           <option key={u.id} value={u.id}>{u.name || u.username} ({u.role})</option>
                         ))}
+                      </select>
+                    </div>
+                  )}
+
+                  {/* Status filter dropdown - Admin only */}
+                  {currentUser?.role === 'Admin' && (
+                    <div className="status-filter-bar">
+                      <span className="filter-bar-label">Filter by Status:</span>
+                      <select 
+                        className="form-control filter-select" 
+                        value={selectedStatusFilter}
+                        onChange={(e) => setSelectedStatusFilter(e.target.value)}
+                      >
+                        <option value="">All Statuses</option>
+                        <option value="Pending">Pending</option>
+                        <option value="In Progress">In Progress</option>
+                        <option value="Review">Review</option>
+                        <option value="Completed">Completed</option>
+                        <option value="overdue">Overdue</option>
                       </select>
                     </div>
                   )}

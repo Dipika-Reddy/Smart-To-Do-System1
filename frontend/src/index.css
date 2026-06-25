@@ -2121,7 +2121,7 @@ a:hover {
     width: 100%;
   }
 
-  .categories-filter-bar, .users-filter-bar {
+  .categories-filter-bar, .users-filter-bar, .status-filter-bar {
     max-width: 100%;
     width: 100%;
     justify-content: space-between;
@@ -2350,7 +2350,7 @@ a:hover {
   flex-wrap: nowrap;
 }
 
-.categories-filter-bar, .users-filter-bar {
+.categories-filter-bar, .users-filter-bar, .status-filter-bar {
   display: flex;
   align-items: center;
   gap: 0.5rem;
