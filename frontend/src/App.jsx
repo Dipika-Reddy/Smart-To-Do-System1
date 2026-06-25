@@ -58,6 +58,7 @@ function App() {
 
   // Filter by user selection for Admin Dashboard
   const [selectedUserFilter, setSelectedUserFilter] = useState('');
+  const [selectedStatusFilter, setSelectedStatusFilter] = useState('');
 
   // Modal Open States
   const [taskModalOpen, setTaskModalOpen] = useState(false);
@@ -841,20 +842,26 @@ function App() {
 
           {/* 2. ADMIN MONITORING DASHBOARD */}
           {activeWorkspace === 'admin_dashboard' && (() => {
-            const filteredTasksForAdmin = selectedUserFilter
+            const now = new Date();
+            const baseFilteredTasks = selectedUserFilter
               ? tasks.filter(t => t.assigned_to === Number(selectedUserFilter))
               : tasks;
 
-            const now = new Date();
+            const filteredTasksForAdmin = selectedStatusFilter
+              ? (selectedStatusFilter === 'overdue'
+                  ? baseFilteredTasks.filter(t => t.status !== 'Completed' && parseNaiveToLocalDate(t.due_date) < now)
+                  : baseFilteredTasks.filter(t => t.status === selectedStatusFilter))
+              : baseFilteredTasks;
+
             const displayStats = !selectedUserFilter
               ? globalDashboardStats
               : {
-                  total: filteredTasksForAdmin.length,
-                  pending: filteredTasksForAdmin.filter(t => t.status === 'Pending').length,
-                  inProgress: filteredTasksForAdmin.filter(t => t.status === 'In Progress').length,
-                  review: filteredTasksForAdmin.filter(t => t.status === 'Review').length,
-                  completed: filteredTasksForAdmin.filter(t => t.status === 'Completed').length,
-                  overdue: filteredTasksForAdmin.filter(t => t.status !== 'Completed' && parseNaiveToLocalDate(t.due_date) < now).length,
+                  total: baseFilteredTasks.length,
+                  pending: baseFilteredTasks.filter(t => t.status === 'Pending').length,
+                  inProgress: baseFilteredTasks.filter(t => t.status === 'In Progress').length,
+                  review: baseFilteredTasks.filter(t => t.status === 'Review').length,
+                  completed: baseFilteredTasks.filter(t => t.status === 'Completed').length,
+                  overdue: baseFilteredTasks.filter(t => t.status !== 'Completed' && parseNaiveToLocalDate(t.due_date) < now).length,
                 };
 
             return (
@@ -930,6 +937,24 @@ function App() {
                       {users.map(u => (
                         <option key={u.id} value={u.id}>{u.name || u.username} ({u.role})</option>
                       ))}
+                    </select>
+                  </div>
+
+                  {/* Status filter dropdown */}
+                  <div className="status-filter-bar" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--bg-secondary)', padding: '0.5rem 0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', maxWidth: 'fit-content' }}>
+                    <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Filter by Status:</span>
+                    <select 
+                      className="form-control" 
+                      style={{ width: '180px', padding: '0.35rem 0.75rem', fontSize: '0.85rem', height: 'auto' }}
+                      value={selectedStatusFilter}
+                      onChange={(e) => setSelectedStatusFilter(e.target.value)}
+                    >
+                      <option value="">All Statuses</option>
+                      <option value="Pending">Pending</option>
+                      <option value="In Progress">In Progress</option>
+                      <option value="Review">Review</option>
+                      <option value="Completed">Completed</option>
+                      <option value="overdue">Overdue</option>
                     </select>
                   </div>
                 </div>
